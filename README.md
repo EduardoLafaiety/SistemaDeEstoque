@@ -1,55 +1,363 @@
 # Sistema de Estoque
 
-Controle de estoque com cadastro de produtos e categorias, registro de entradas/saídas e dashboard.
+Aplicação web de controle de estoque com cadastro de produtos e categorias, registro de entradas e saídas
+e um dashboard com indicadores e alertas de estoque baixo.
 
-| Parte      | Stack                                   | Porta |
-| ---------- | --------------------------------------- | ----- |
-| `backend`  | Node.js 22.13+ · Express 5 · SQLite (`node:sqlite`) | 3000  |
-| `frontend` | Angular 22 (standalone, signals, zoneless) | 4200  |
+![Node.js](https://img.shields.io/badge/Node.js-22.13+-339933?logo=node.js&logoColor=white)
+![Express](https://img.shields.io/badge/Express-5-000000?logo=express&logoColor=white)
+![SQLite](https://img.shields.io/badge/SQLite-node%3Asqlite-003B57?logo=sqlite&logoColor=white)
+![Angular](https://img.shields.io/badge/Angular-22-DD0031?logo=angular&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-6-3178C6?logo=typescript&logoColor=white)
+
+---
+
+## Sumário
+
+- [Funcionalidades](#funcionalidades)
+- [Arquitetura](#arquitetura)
+- [Estrutura do repositório](#estrutura-do-repositório)
+- [Pré-requisitos](#pré-requisitos)
+- [Como rodar](#como-rodar)
+- [Configuração](#configuração)
+- [Modelo de dados](#modelo-de-dados)
+- [API REST](#api-rest)
+- [Frontend](#frontend)
+- [Regras de negócio](#regras-de-negócio)
+- [Módulo Spring Boot (em desenvolvimento)](#módulo-spring-boot-em-desenvolvimento)
+- [Roadmap](#roadmap)
+
+---
+
+## Funcionalidades
+
+- **Dashboard**: total de produtos, itens em estoque, valor total do inventário, quantidade de categorias,
+  os produtos abaixo do estoque mínimo e as últimas movimentações.
+- **Produtos**: cadastro com SKU único, descrição, categoria, preço, quantidade inicial e estoque mínimo.
+  Busca por nome/SKU, filtro por categoria e filtro de "estoque baixo".
+- **Categorias**: CRUD com contagem de produtos por categoria.
+- **Movimentações**: registro de **entradas** e **saídas** com observação. O saldo é atualizado em transação,
+  e saídas maiores que o saldo disponível são recusadas.
+- **Dados de exemplo**: na primeira execução o banco é criado e populado com categorias e produtos.
+
+## Arquitetura
+
+```
+┌──────────────────────────┐   /api (proxy)  ┌──────────────────────────┐        ┌──────────────┐
+│ Frontend Angular 22      │ ──────────────▶ │ Backend Express 5        │ ─────▶ │ SQLite       │
+│ localhost:4200           │                 │ localhost:3000/api       │        │ data/*.db    │
+│ standalone · signals     │ ◀────────────── │ JSON REST                │ ◀───── │ (node:sqlite)│
+└──────────────────────────┘      JSON       └──────────────────────────┘        └──────────────┘
+```
+
+| Parte      | Stack                                                    | Porta |
+| ---------- | -------------------------------------------------------- | ----- |
+| `backend`  | Node.js 22.13+ · Express 5 · SQLite nativo (`node:sqlite`) | 3000  |
+| `frontend` | Angular 22 (standalone components, signals, zoneless)    | 4200  |
+
+O backend não usa ORM nem driver externo: o SQLite vem embutido no Node (`node:sqlite`), então as únicas
+dependências de runtime são `express` e `cors`.
+
+## Estrutura do repositório
+
+```
+.
+├── backend/                  # API REST (Node.js + Express + SQLite)
+│   ├── src/
+│   │   ├── server.js         # Ponto de entrada: middlewares e registro das rotas
+│   │   ├── db.js             # Conexão, schema, transações e dados de exemplo
+│   │   ├── errors.js         # HttpError, validação e tratamento de erros
+│   │   └── routes/           # categorias, produtos, movimentacoes, dashboard
+│   └── data/                 # Banco SQLite (gerado em runtime, ignorado pelo git)
+│
+├── frontend/                 # SPA Angular
+│   ├── proxy.conf.json       # Encaminha /api → http://localhost:3000
+│   └── src/app/
+│       ├── core/             # ApiService, modelos, interceptor de erros, toasts, pipes
+│       └── pages/            # dashboard, produtos, produto-form, categorias, movimentacoes
+│
+├── src/ · pom.xml · mvnw     # Módulo Spring Boot (em desenvolvimento, veja abaixo)
+└── README.md
+```
+
+## Pré-requisitos
+
+- **Node.js 22.13 ou superior**: o backend usa o módulo nativo `node:sqlite`.
+- **npm** (o frontend declara `npm@11`).
+
+Para conferir:
+
+```bash
+node --version
+```
 
 ## Como rodar
 
 Em dois terminais:
 
-```bash
-cd backend && npm install && npm run dev
-```
+**1. Backend**
 
 ```bash
-cd frontend && npm install && npm start
+cd backend
+npm install
+npm run dev
 ```
 
-Acesse http://localhost:4200. O `ng serve` usa `frontend/proxy.conf.json` para encaminhar `/api` ao backend,
-então não é preciso configurar URL nem CORS em desenvolvimento.
+A API sobe em http://localhost:3000/api. O `npm run dev` usa `node --watch` e reinicia a cada alteração.
+Para rodar sem watch, use `npm start`.
 
-Na primeira execução o banco é criado em `backend/data/estoque.db` com algumas categorias e produtos de exemplo.
+**2. Frontend**
 
-### Variáveis do backend
+```bash
+cd frontend
+npm install
+npm start
+```
 
-| Variável      | Padrão                  |
-| ------------- | ----------------------- |
-| `PORT`        | `3000`                  |
-| `DB_PATH`     | `data/estoque.db`       |
-| `CORS_ORIGIN` | `http://localhost:4200` |
+Acesse **http://localhost:4200**.
 
-## API
+Em desenvolvimento, o `ng serve` usa o `frontend/proxy.conf.json` para encaminhar as chamadas `/api` ao backend,
+então não é preciso configurar URL nem CORS.
 
-Erros retornam `{ "erro": "mensagem" }` com o status HTTP apropriado (400, 404, 409).
+Para verificar se a API está no ar:
 
-| Método | Rota                      | Descrição |
-| ------ | ------------------------- | --------- |
-| GET    | `/api/dashboard`          | Totais, produtos abaixo do mínimo e últimas movimentações |
-| GET    | `/api/categorias`         | Lista categorias (com `totalProdutos`) |
-| POST   | `/api/categorias`         | `{ nome }` |
-| PUT    | `/api/categorias/:id`     | `{ nome }` |
-| DELETE | `/api/categorias/:id`     | Produtos da categoria ficam sem categoria |
-| GET    | `/api/produtos`           | Filtros: `busca`, `categoriaId`, `baixoEstoque=true` |
-| GET    | `/api/produtos/:id`       | |
-| POST   | `/api/produtos`           | `{ sku, nome, descricao?, categoriaId?, preco, estoqueMinimo?, quantidade? }` |
-| PUT    | `/api/produtos/:id`       | Mesmo corpo, sem `quantidade` |
-| DELETE | `/api/produtos/:id`       | Remove também o histórico |
-| GET    | `/api/movimentacoes`      | Filtros: `produtoId`, `tipo`, `limite` (padrão 100) |
-| POST   | `/api/movimentacoes`      | `{ produtoId, tipo: "ENTRADA" \| "SAIDA", quantidade, observacao? }` |
+```bash
+curl http://localhost:3000/api/health
+```
 
-A quantidade de um produto só é definida na criação; depois disso muda apenas por movimentações,
-que rodam em transação e recusam saídas maiores que o saldo.
+### Build de produção do frontend
+
+```bash
+cd frontend
+npm run build
+```
+
+Os arquivos gerados ficam em `frontend/dist/frontend/browser/`.
+
+### Testes do frontend
+
+```bash
+cd frontend
+npm test
+```
+
+O projeto usa Vitest com jsdom.
+
+### Resetar o banco
+
+Pare o backend e apague a pasta `backend/data/`. Na próxima execução o banco é recriado com os dados de exemplo.
+
+## Configuração
+
+O backend lê variáveis de ambiente (todas opcionais):
+
+| Variável      | Padrão                  | Descrição                                 |
+| ------------- | ----------------------- | ----------------------------------------- |
+| `PORT`        | `3000`                  | Porta HTTP da API                         |
+| `DB_PATH`     | `data/estoque.db`       | Caminho do arquivo SQLite                 |
+| `CORS_ORIGIN` | `http://localhost:4200` | Origem permitida pelo CORS                |
+
+Exemplo (bash):
+
+```bash
+PORT=4000 DB_PATH=/tmp/estoque.db npm start
+```
+
+> Se mudar a porta do backend, ajuste também o `target` em `frontend/proxy.conf.json`.
+
+## Modelo de dados
+
+```
+categorias 1 ──── N produtos 1 ──── N movimentacoes
+```
+
+**categorias**
+
+| Coluna | Tipo    | Regras                                  |
+| ------ | ------- | --------------------------------------- |
+| `id`   | INTEGER | PK, autoincremento                      |
+| `nome` | TEXT    | obrigatório, único (sem diferenciar maiúsculas) |
+
+**produtos**
+
+| Coluna           | Tipo    | Regras                                                  |
+| ---------------- | ------- | ------------------------------------------------------- |
+| `id`             | INTEGER | PK, autoincremento                                      |
+| `sku`            | TEXT    | obrigatório, único (sem diferenciar maiúsculas)         |
+| `nome`           | TEXT    | obrigatório                                             |
+| `descricao`      | TEXT    | opcional                                                |
+| `categoria_id`   | INTEGER | FK → `categorias`, `ON DELETE SET NULL`                 |
+| `preco`          | REAL    | `>= 0`                                                  |
+| `quantidade`     | INTEGER | `>= 0`                                                  |
+| `estoque_minimo` | INTEGER | `>= 0`                                                  |
+| `criado_em`      | TEXT    | data/hora UTC                                           |
+| `atualizado_em`  | TEXT    | data/hora UTC                                           |
+
+**movimentacoes**
+
+| Coluna       | Tipo    | Regras                                          |
+| ------------ | ------- | ----------------------------------------------- |
+| `id`         | INTEGER | PK, autoincremento                              |
+| `produto_id` | INTEGER | FK → `produtos`, `ON DELETE CASCADE`            |
+| `tipo`       | TEXT    | `ENTRADA` ou `SAIDA`                            |
+| `quantidade` | INTEGER | `> 0`                                           |
+| `observacao` | TEXT    | opcional                                        |
+| `criado_em`  | TEXT    | data/hora UTC                                   |
+
+O banco roda com `foreign_keys = ON` e `journal_mode = WAL`.
+
+## API REST
+
+Base: `http://localhost:3000/api`. Todas as requisições e respostas usam JSON.
+
+### Endpoints
+
+| Método | Rota                  | Descrição                                                    |
+| ------ | --------------------- | ------------------------------------------------------------ |
+| GET    | `/health`             | Verificação de saúde (`{ "status": "ok" }`)                  |
+| GET    | `/dashboard`          | Totais, produtos abaixo do mínimo e últimas movimentações    |
+| GET    | `/categorias`         | Lista as categorias (com `totalProdutos`)                    |
+| GET    | `/categorias/:id`     | Detalha uma categoria                                        |
+| POST   | `/categorias`         | Cria uma categoria: `{ nome }`                               |
+| PUT    | `/categorias/:id`     | Renomeia uma categoria: `{ nome }`                           |
+| DELETE | `/categorias/:id`     | Remove a categoria; os produtos dela ficam sem categoria     |
+| GET    | `/produtos`           | Lista. Filtros: `busca`, `categoriaId`, `baixoEstoque=true`  |
+| GET    | `/produtos/:id`       | Detalha um produto                                           |
+| POST   | `/produtos`           | Cria um produto (veja o corpo abaixo)                        |
+| PUT    | `/produtos/:id`       | Atualiza um produto (mesmo corpo, sem `quantidade`)          |
+| DELETE | `/produtos/:id`       | Remove o produto e o histórico de movimentações dele         |
+| GET    | `/movimentacoes`      | Lista. Filtros: `produtoId`, `tipo`, `limite` (padrão 100, máx. 500) |
+| POST   | `/movimentacoes`      | Registra uma entrada ou saída                                |
+
+### Exemplos
+
+**Criar produto**
+
+```http
+POST /api/produtos
+Content-Type: application/json
+
+{
+  "sku": "ELE-003",
+  "nome": "Monitor 24\"",
+  "descricao": "Full HD, HDMI",
+  "categoriaId": 1,
+  "preco": 899.9,
+  "estoqueMinimo": 3,
+  "quantidade": 10
+}
+```
+
+Resposta `201 Created`:
+
+```json
+{
+  "id": 6,
+  "sku": "ELE-003",
+  "nome": "Monitor 24\"",
+  "descricao": "Full HD, HDMI",
+  "preco": 899.9,
+  "quantidade": 10,
+  "estoqueMinimo": 3,
+  "categoriaId": 1,
+  "categoriaNome": "Eletrônicos",
+  "criadoEm": "2026-10-24 14:00:00",
+  "atualizadoEm": "2026-10-24 14:00:00"
+}
+```
+
+**Registrar saída**
+
+```bash
+curl -X POST http://localhost:3000/api/movimentacoes \
+  -H "Content-Type: application/json" \
+  -d '{ "produtoId": 6, "tipo": "SAIDA", "quantidade": 2, "observacao": "Pedido #123" }'
+```
+
+**Listar produtos com estoque baixo**
+
+```bash
+curl "http://localhost:3000/api/produtos?baixoEstoque=true"
+```
+
+### Erros
+
+Os erros retornam `{ "erro": "mensagem" }` com o status HTTP correspondente:
+
+| Status | Quando                                                                 |
+| ------ | ---------------------------------------------------------------------- |
+| `400`  | Campo obrigatório ausente, valor inválido, JSON malformado ou estoque insuficiente |
+| `404`  | Recurso ou rota não encontrados                                        |
+| `409`  | Violação de unicidade (SKU ou nome de categoria já existente)          |
+| `500`  | Erro inesperado                                                        |
+
+```json
+{ "erro": "Estoque insuficiente. Disponível: 4." }
+```
+
+## Frontend
+
+SPA em Angular 22 com componentes standalone, signals e change detection sem Zone.js. Todas as páginas
+usam lazy loading.
+
+| Rota               | Página                                                |
+| ------------------ | ----------------------------------------------------- |
+| `/`                | Dashboard com indicadores, estoque baixo e últimas movimentações |
+| `/produtos`        | Lista de produtos com busca e filtros                 |
+| `/produtos/novo`   | Cadastro de produto                                   |
+| `/produtos/:id`    | Edição de produto                                     |
+| `/categorias`      | Gestão de categorias                                  |
+| `/movimentacoes`   | Registro e histórico de entradas e saídas             |
+
+Organização em `src/app/core/`:
+
+- `api.service.ts`: acesso tipado à API REST.
+- `models.ts`: interfaces de `Produto`, `Categoria`, `Movimentacao` e `Dashboard`.
+- `error.interceptor.ts`: intercepta erros HTTP e mostra a mensagem `erro` da API.
+- `toast.service.ts`: notificações de sucesso e erro.
+- `data-utc.pipe.ts`: exibe no fuso local as datas UTC salvas pelo SQLite.
+
+## Regras de negócio
+
+- A **quantidade** de um produto só é informada na criação. Depois disso ela muda **apenas por movimentações**,
+  o que mantém o histórico consistente com o saldo.
+- Cada movimentação roda em **transação**: o saldo é atualizado e a movimentação é registrada juntos,
+  ou nenhum dos dois acontece.
+- **Saídas** maiores que o saldo disponível são recusadas com `400`.
+- Um produto está com **estoque baixo** quando `quantidade <= estoque_minimo`.
+- O **valor total** do inventário é `Σ quantidade × preço`.
+- Excluir uma **categoria** não exclui os produtos dela: eles ficam sem categoria.
+- Excluir um **produto** remove também as movimentações dele (`ON DELETE CASCADE`).
+- SKU e nome de categoria são únicos, sem diferenciar maiúsculas de minúsculas.
+
+## Módulo Spring Boot (em desenvolvimento)
+
+A raiz do repositório (`pom.xml`, `mvnw`, `src/main/java/com/estoque`) contém uma versão em
+**Java/Spring Boot** do sistema, ainda em construção. A proposta é um controle de estoque mais completo,
+inspirado no módulo de Inventário do Odoo:
+
+- Armazéns e locais de estoque hierárquicos
+- Saldos por local (quants) e movimentos de estoque
+- Operações de recebimento e expedição (pickings)
+- Pedidos de compra e ordens de produção
+- **Regras de reposição** (estoque mínimo/máximo) com tela de reabastecimento e agendamento automático
+- Parceiros (fornecedores/clientes) e usuários com papéis
+
+| Stack prevista |                                                                 |
+| -------------- | --------------------------------------------------------------- |
+| Linguagem      | Java 25                                                         |
+| Framework      | Spring Boot 4 (Web MVC, Data JPA, Security, Validation, Actuator) |
+| Interface      | Thymeleaf + Bootstrap                                           |
+| Banco          | PostgreSQL com migrações Flyway                                 |
+| Documentação   | springdoc-openapi (Swagger UI)                                  |
+| Testes         | JUnit + Testcontainers                                          |
+
+> Esse módulo ainda não está funcional. A aplicação utilizável hoje é a dupla `backend/` + `frontend/`.
+
+## Roadmap
+
+- [ ] Autenticação com JWT e perfis de usuário
+- [ ] Cadastro de fornecedores
+- [ ] Paginação nas listagens
+- [ ] Testes automatizados da API
+- [ ] Exportação de relatórios (CSV)
+- [ ] Concluir o módulo Spring Boot (reposição automática, compras e produção)
