@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout(title=${order != null ? order.reference : 'Nova ordem'}, content=~{::main})}">
+<body>
+<main class="o-main" th:with="editable=${order == null or order.state.name() == 'DRAFT'}">
+    <div class="o-control-panel">
+        <div class="o-cp-left">
+            <span class="o-cp-title"><a class="bc" th:href="@{/production}">Ordens de produção</a> /
+                <span th:text="${order != null} ? ${order.reference} : 'Nova'"></span></span>
+        </div>
+        <div></div>
+        <div class="o-cp-right" th:if="${editable}">
+            <button class="btn btn-primary btn-sm" type="submit" form="productionForm">Salvar</button>
+            <a class="btn btn-secondary btn-sm" th:href="@{/production}">Descartar</a>
+        </div>
+    </div>
+    <div class="o-form-view">
+        <div class="o-form-statusbar" th:if="${order != null}">
+            <div class="d-flex gap-2 flex-wrap">
+                <form th:if="${order.state.name() == 'DRAFT'}" method="post" th:action="@{/production/{id}/confirm(id=${order.id})}">
+                    <button class="btn btn-primary btn-sm" type="submit">Confirmar</button></form>
+                <form th:if="${order.state.name() == 'CONFIRMED'}" method="post" th:action="@{/production/{id}/produce(id=${order.id})}">
+                    <button class="btn btn-primary btn-sm" type="submit" data-confirm="Concluir a produção e adicionar ao estoque?">Produzir</button></form>
+                <form th:if="${order.state.name() == 'DRAFT' or order.state.name() == 'CONFIRMED'}" method="post"
+                      th:action="@{/production/{id}/cancel(id=${order.id})}">
+                    <button class="btn btn-secondary btn-sm" type="submit" data-confirm="Cancelar esta ordem?">Cancelar</button></form>
+            </div>
+            <th:block th:with="states=${T(com.estoque.domain.ProductionState).values()}"><div th:replace="~{fragments :: statusbar(${states}, ${order.state})}"></div></th:block>
+        </div>
+
+        <form id="productionForm" class="o-form-sheet" method="post" th:action="@{/production/save}" th:object="${form}">
+            <input type="hidden" th:field="*{id}">
+            <div class="alert alert-danger" th:if="${#fields.hasAnyErrors()}">
+                <div th:each="e : ${#fields.allErrors()}" th:text="${e}"></div>
+            </div>
+            <h1 th:text="${order != null} ? ${order.reference} : 'Nova ordem de produção'"></h1>
+            <fieldset th:disabled="${!editable}">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label" for="productId">Produto</label>
+                        <select class="form-select" th:field="*{productId}" required>
+                            <option value="">Selecione...</option>
+                            <option th:each="p : ${products}" th:value="${p.id}" th:text="${p.displayName}"></option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label" for="quantity">Quantidade</label>
+                        <input class="form-control" type="number" step="any" min="0" th:field="*{quantity}" required>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label" for="scheduledDate">Data programada</label>
+                        <input class="form-control" type="date" th:field="*{scheduledDate}" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" for="locationId">Local de destino do produto acabado</label>
+                        <select class="form-select" th:field="*{locationId}" required>
+                            <option th:each="l : ${locations}" th:value="${l.id}" th:text="${l.fullName}"></option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" for="origin">Origem</label>
+                        <input class="form-control" th:field="*{origin}">
+                    </div>
+                </div>
+            </fieldset>
+            <p class="text-muted small mt-3 mb-0" th:if="${order != null and order.doneDate != null}">
+                Concluída em <span th:text="${@fmt.dateTime(order.doneDate)}"></span>.</p>
+        </form>
+    </div>
+</main>
+</body>
+</html>

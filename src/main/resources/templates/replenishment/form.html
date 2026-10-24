@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout(title='Regra de reposição', content=~{::main})}">
+<body>
+<main class="o-main">
+    <div class="o-control-panel">
+        <div class="o-cp-left">
+            <span class="o-cp-title"><a class="bc" th:href="@{/replenishment}">Reposição</a> /
+                <span th:text="${form.id == null} ? 'Nova' : 'Editar regra'"></span></span>
+        </div>
+        <div></div>
+        <div class="o-cp-right">
+            <button class="btn btn-primary btn-sm" type="submit" form="ruleForm">Salvar</button>
+            <a class="btn btn-secondary btn-sm" th:href="@{/replenishment}">Descartar</a>
+        </div>
+    </div>
+    <div class="o-form-view">
+        <form id="ruleForm" class="o-form-sheet" method="post" th:action="@{/replenishment/save}" th:object="${form}">
+            <input type="hidden" th:field="*{id}">
+            <div class="alert alert-danger" th:if="${#fields.hasAnyErrors()}">
+                <div th:each="e : ${#fields.allErrors()}" th:text="${e}"></div>
+            </div>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label" for="productId">Produto</label>
+                    <select class="form-select" th:field="*{productId}" required>
+                        <option value="">Selecione...</option>
+                        <option th:each="p : ${products}" th:value="${p.id}" th:text="${p.displayName}"></option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="locationId">Local</label>
+                    <select class="form-select" th:field="*{locationId}" required>
+                        <option th:each="l : ${locations}" th:value="${l.id}" th:text="${l.fullName}"></option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label" for="minQty">Quantidade mínima</label>
+                    <input class="form-control" type="number" step="any" min="0" th:field="*{minQty}" required>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label" for="maxQty">Quantidade máxima</label>
+                    <input class="form-control" type="number" step="any" min="0" th:field="*{maxQty}" required>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label" for="multipleQty">Múltiplo</label>
+                    <input class="form-control" type="number" step="any" min="0" th:field="*{multipleQty}" required>
+                    <div class="form-text">O pedido é arredondado para cima neste múltiplo.</div>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label" for="trigger">Gatilho</label>
+                    <select class="form-select" th:field="*{trigger}">
+                        <option th:each="t : ${triggers}" th:value="${t}" th:text="${t.label}"></option>
+                    </select>
+                    <div class="form-text">Automático: o agendador gera os pedidos sozinho.</div>
+                </div>
+            </div>
+            <hr>
+            <p class="text-muted small mb-0"><i class="bi bi-info-circle"></i>
+                Quando a previsão (saldo + entradas − saídas + cotações em aberto) fica abaixo do mínimo,
+                o sistema sugere pedir o necessário para voltar ao máximo.</p>
+        </form>
+    </div>
+</main>
+</body>
+</html>

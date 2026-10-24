@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout(title='Inventário físico', content=~{::main})}">
+<body>
+<main class="o-main">
+    <div class="o-control-panel">
+        <div class="o-cp-left"><span class="o-cp-title">Inventário físico</span></div>
+        <div></div>
+        <div class="o-cp-right">
+            <form method="get" class="d-flex align-items-center gap-2">
+                <label for="location" class="text-muted small">Local</label>
+                <select id="location" name="location" class="form-select form-select-sm" onchange="this.form.submit()">
+                    <option th:each="l : ${locations}" th:value="${l.id}" th:text="${l.fullName}" th:selected="${l.id == location.id}"></option>
+                </select>
+            </form>
+        </div>
+    </div>
+    <div class="o-content">
+        <table class="o-list">
+            <thead><tr><th>Produto</th><th>Local</th><th class="num">Em estoque</th><th class="num" style="width: 180px">Quantidade contada</th><th></th></tr></thead>
+            <tbody>
+            <tr th:each="q : ${quants}">
+                <td th:text="${q.product.displayName}"></td>
+                <td class="muted" th:text="${location.fullName}"></td>
+                <td class="num" th:text="${@fmt.qty(q.quantity)}"></td>
+                <td colspan="2">
+                    <form method="post" th:action="@{/inventory/apply}" class="d-flex justify-content-end gap-2">
+                        <input type="hidden" name="productId" th:value="${q.product.id}">
+                        <input type="hidden" name="locationId" th:value="${location.id}">
+                        <input class="form-control form-control-sm text-end" style="width: 120px" type="number" step="any" min="0"
+                               name="counted" th:value="${@fmt.input(q.quantity)}" required aria-label="Quantidade contada">
+                        <button class="btn btn-secondary btn-sm" type="submit">Aplicar</button>
+                    </form>
+                </td>
+            </tr>
+            <tr th:if="${quants.isEmpty()}"><td colspan="5" class="muted">Nenhum produto com saldo neste local.</td></tr>
+            </tbody>
+            <tfoot>
+            <tr>
+                <td colspan="5">
+                    <form method="post" th:action="@{/inventory/apply}" class="d-flex flex-wrap align-items-center gap-2 py-1">
+                        <input type="hidden" name="locationId" th:value="${location.id}">
+                        <span class="fw-normal text-muted">Contar outro produto:</span>
+                        <select class="form-select form-select-sm" style="max-width: 360px" name="productId" required aria-label="Produto">
+                            <option value="">Selecione...</option>
+                            <option th:each="p : ${products}" th:value="${p.id}" th:text="${p.displayName}"></option>
+                        </select>
+                        <input class="form-control form-control-sm text-end" style="width: 120px" type="number" step="any" min="0"
+                               name="counted" placeholder="Contado" required aria-label="Quantidade contada">
+                        <button class="btn btn-primary btn-sm" type="submit">Aplicar</button>
+                    </form>
+                </td>
+            </tr>
+            </tfoot>
+        </table>
+        <p class="text-muted small px-3 pt-2"><i class="bi bi-info-circle"></i>
+            A diferença entre o contado e o saldo gera um movimento de/para "Virtual/Ajuste de Inventário".</p>
+    </div>
+</main>
+</body>
+</html>

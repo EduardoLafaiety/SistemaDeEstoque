@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout(title='Usuários', content=~{::main})}">
+<body>
+<main class="o-main">
+    <div class="o-control-panel">
+        <div class="o-cp-left">
+            <a class="btn btn-primary btn-sm" th:href="@{/config/users/new}">Novo</a>
+            <span class="o-cp-title">Usuários</span>
+        </div>
+        <div></div><div></div>
+    </div>
+    <div class="o-content">
+        <table class="o-list">
+            <thead><tr><th>Nome</th><th>Login</th><th>Perfil</th><th>Situação</th></tr></thead>
+            <tbody>
+            <tr th:each="u : ${users}" th:attr="data-href=@{/config/users/{id}(id=${u.id})}">
+                <td class="fw-semibold" th:text="${u.fullName}"></td>
+                <td th:text="${u.username}"></td>
+                <td th:text="${u.role.label}"></td>
+                <td><span class="badge-state" th:classappend="${u.active} ? 'badge-DONE' : 'badge-DRAFT'"
+                          th:text="${u.active} ? 'Ativo' : 'Inativo'"></span></td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</main>
+</body>
+</html>

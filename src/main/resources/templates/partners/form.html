@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout(title=${partner.id == null ? 'Novo parceiro' : partner.name}, content=~{::main})}">
+<body>
+<main class="o-main">
+    <div class="o-control-panel">
+        <div class="o-cp-left">
+            <span class="o-cp-title"><a class="bc" th:href="@{/partners}">Fornecedores e clientes</a> /
+                <span th:text="${partner.id == null} ? 'Novo' : ${partner.name}"></span></span>
+        </div>
+        <div></div>
+        <div class="o-cp-right">
+            <button class="btn btn-primary btn-sm" type="submit" form="partnerForm">Salvar</button>
+            <a class="btn btn-secondary btn-sm" th:href="@{/partners}">Descartar</a>
+        </div>
+    </div>
+    <div class="o-form-view">
+        <form id="partnerForm" class="o-form-sheet" method="post" th:action="@{/partners/save}" th:object="${partner}">
+            <input type="hidden" th:field="*{id}">
+            <div class="alert alert-danger" th:if="${#fields.hasAnyErrors()}">
+                <div th:each="e : ${#fields.allErrors()}" th:text="${e}"></div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label" for="name">Nome / Razão social</label>
+                <input class="form-control form-control-lg" th:field="*{name}" required>
+            </div>
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label" for="document">CNPJ/CPF</label>
+                    <input class="form-control" th:field="*{document}">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="email">E-mail</label>
+                    <input class="form-control" type="email" th:field="*{email}">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="phone">Telefone</label>
+                    <input class="form-control" th:field="*{phone}">
+                </div>
+                <div class="col-12 d-flex gap-4">
+                    <div class="form-check"><input class="form-check-input" type="checkbox" th:field="*{supplier}">
+                        <label class="form-check-label" th:for="${#ids.prev('supplier')}">Fornecedor</label></div>
+                    <div class="form-check"><input class="form-check-input" type="checkbox" th:field="*{customer}">
+                        <label class="form-check-label" th:for="${#ids.prev('customer')}">Cliente</label></div>
+                    <div class="form-check"><input class="form-check-input" type="checkbox" th:field="*{active}">
+                        <label class="form-check-label" th:for="${#ids.prev('active')}">Ativo</label></div>
+                </div>
+            </div>
+        </form>
+    </div>
+</main>
+</body>
+</html>

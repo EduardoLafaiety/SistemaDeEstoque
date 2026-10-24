@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout(title='Locais', content=~{::main})}">
+<body>
+<main class="o-main">
+    <div class="o-control-panel">
+        <div class="o-cp-left"><span class="o-cp-title">Locais</span></div>
+        <div></div><div></div>
+    </div>
+    <div class="o-form-view">
+        <div class="o-form-sheet">
+            <table class="o-list mb-4">
+                <thead><tr><th>Local</th><th>Tipo</th><th>Situação</th></tr></thead>
+                <tbody>
+                <tr th:each="l : ${locations}" th:attr="data-href=@{/config/locations/{id}(id=${l.id})}">
+                    <td th:style="|padding-left: ${0.5 + l.depth * 1.25}rem|" th:text="${l.fullName}"></td>
+                    <td th:text="${l.usage.label}"></td>
+                    <td><span class="badge-state" th:classappend="${l.active} ? 'badge-DONE' : 'badge-DRAFT'"
+                              th:text="${l.active} ? 'Ativo' : 'Arquivado'"></span></td>
+                </tr>
+                </tbody>
+            </table>
+            <h6>Novo local</h6>
+            <form method="post" th:action="@{/config/locations}" class="row g-2 align-items-end">
+                <div class="col-md-4"><label class="form-label" for="lName">Nome</label>
+                    <input class="form-control" id="lName" name="name" required placeholder="ex.: Prateleira C"></div>
+                <div class="col-md-4"><label class="form-label" for="lParent">Local pai</label>
+                    <select class="form-select" id="lParent" name="parentId">
+                        <option value="">— (raiz)</option>
+                        <option th:each="l : ${locations}" th:value="${l.id}" th:text="${l.fullName}"></option>
+                    </select></div>
+                <div class="col-md-2"><label class="form-label" for="lUsage">Tipo</label>
+                    <select class="form-select" id="lUsage" name="usage">
+                        <option th:each="u : ${usages}" th:value="${u}" th:text="${u.label}" th:selected="${u.name() == 'INTERNAL'}"></option>
+                    </select></div>
+                <div class="col-md-2"><button class="btn btn-primary w-100" type="submit">Criar</button></div>
+            </form>
+        </div>
+    </div>
+</main>
+</body>
+</html>

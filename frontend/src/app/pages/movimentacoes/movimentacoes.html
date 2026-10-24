@@ -40,7 +40,7 @@
 
     <div class="campo">
       <label for="obs">Observação</label>
-      <input id="obs" formControlName="observacao" placeholder="ex.: NF 1234, venda, ajuste…" />
+      <input id="obs" formControlName="observacao" maxlength="500" placeholder="ex.: NF 1234, venda, ajuste…" />
     </div>
 
     <button class="btn primario" type="submit" [disabled]="salvando()">
@@ -53,8 +53,8 @@
     <div class="filtros">
       <select [(ngModel)]="filtroProdutoId" (ngModelChange)="carregarHistorico()" aria-label="Filtrar por produto">
         <option [ngValue]="null">Todos os produtos</option>
-        @for (p of produtos(); track p.id) {
-          <option [ngValue]="p.id">{{ p.nome }}</option>
+        @for (p of todosProdutos(); track p.id) {
+          <option [ngValue]="p.id">{{ p.nome }}{{ p.ativo ? '' : ' (inativo)' }}</option>
         }
       </select>
       <select [(ngModel)]="filtroTipo" (ngModelChange)="carregarHistorico()" aria-label="Filtrar por tipo">
@@ -62,6 +62,12 @@
         <option value="ENTRADA">Só entradas</option>
         <option value="SAIDA">Só saídas</option>
       </select>
+      <label class="periodo">
+        De <input type="date" [(ngModel)]="filtroInicio" (ngModelChange)="carregarHistorico()" [max]="filtroFim || null" />
+      </label>
+      <label class="periodo">
+        até <input type="date" [(ngModel)]="filtroFim" (ngModelChange)="carregarHistorico()" [min]="filtroInicio || null" />
+      </label>
     </div>
 
     <div class="tabela-wrap">
@@ -72,6 +78,7 @@
             <th>Tipo</th>
             <th>Produto</th>
             <th class="num">Qtd.</th>
+            <th class="num">Saldo</th>
             <th>Observação</th>
           </tr>
         </thead>
@@ -89,11 +96,18 @@
                 <div class="suave"><code>{{ m.produtoSku }}</code></div>
               </td>
               <td class="num">{{ m.tipo === 'ENTRADA' ? '+' : '−' }}{{ m.quantidade }}</td>
+              <td class="num saldo-mov">
+                @if (m.quantidadePosterior !== null) {
+                  <span class="suave">{{ m.quantidadeAnterior }} →</span> {{ m.quantidadePosterior }}
+                } @else {
+                  <span class="suave">—</span>
+                }
+              </td>
               <td>{{ m.observacao ?? '—' }}</td>
             </tr>
           } @empty {
             <tr>
-              <td colspan="5" class="vazio">
+              <td colspan="6" class="vazio">
                 {{ carregando() ? 'Carregando…' : 'Nenhuma movimentação encontrada.' }}
               </td>
             </tr>

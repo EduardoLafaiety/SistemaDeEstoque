@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout(title=${order != null ? order.reference : 'Nova cotação'}, content=~{::main})}">
+<body>
+<main class="o-main" th:with="editable=${order == null or order.state.name() == 'DRAFT'}">
+    <div class="o-control-panel">
+        <div class="o-cp-left">
+            <span class="o-cp-title"><a class="bc" th:href="@{/purchases}">Compras</a> /
+                <span th:text="${order != null} ? ${order.reference} : 'Nova'"></span></span>
+        </div>
+        <div></div>
+        <div class="o-cp-right" th:if="${editable}">
+            <button class="btn btn-primary btn-sm" type="submit" form="purchaseForm">Salvar</button>
+            <a class="btn btn-secondary btn-sm" th:href="@{/purchases}">Descartar</a>
+        </div>
+    </div>
+    <div class="o-form-view">
+        <div class="o-form-statusbar" th:if="${order != null}">
+            <div class="d-flex gap-2 flex-wrap">
+                <form th:if="${order.state.name() == 'DRAFT'}" method="post" th:action="@{/purchases/{id}/confirm(id=${order.id})}">
+                    <button class="btn btn-primary btn-sm" type="submit">Confirmar pedido</button></form>
+                <a th:each="r : ${receipts}" class="btn btn-secondary btn-sm" th:href="@{/pickings/{id}(id=${r.id})}">
+                    <i class="bi bi-box-arrow-in-down"></i> Recebimento <span th:text="${r.reference}"></span>
+                    (<span th:text="${r.state.label}"></span>)</a>
+                <form th:if="${order.state.name() == 'DRAFT' or order.state.name() == 'CONFIRMED'}" method="post"
+                      th:action="@{/purchases/{id}/cancel(id=${order.id})}">
+                    <button class="btn btn-secondary btn-sm" type="submit" data-confirm="Cancelar este pedido?">Cancelar</button></form>
+                <form th:if="${order.state.name() == 'DRAFT' or order.state.name() == 'CANCELLED'}" method="post"
+                      th:action="@{/purchases/{id}/delete(id=${order.id})}">
+                    <button class="btn btn-secondary btn-sm" type="submit" data-confirm="Excluir este pedido?"><i class="bi bi-trash"></i></button></form>
+            </div>
+            <th:block th:with="states=${T(com.estoque.domain.PurchaseState).values()}"><div th:replace="~{fragments :: statusbar(${states}, ${order.state})}"></div></th:block>
+        </div>
+
+        <form id="purchaseForm" class="o-form-sheet" method="post" th:action="@{/purchases/save}" th:object="${form}">
+            <input type="hidden" th:field="*{id}">
+            <div class="alert alert-danger" th:if="${#fields.hasAnyErrors()}">
+                <div th:each="e : ${#fields.allErrors()}" th:text="${e}"></div>
+            </div>
+            <div class="text-muted small" th:text="${order == null or order.state.name() == 'DRAFT'} ? 'Solicitação de cotação' : 'Pedido de compra'"></div>
+            <h1 th:text="${order != null} ? ${order.reference} : 'Nova'"></h1>
+            <fieldset th:disabled="${!editable}">
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <label class="form-label" for="partnerId">Fornecedor</label>
+                        <select class="form-select" th:field="*{partnerId}" required>
+                            <option value="">Selecione...</option>
+                            <option th:each="s : ${suppliers}" th:value="${s.id}" th:text="${s.name}"></option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label" for="expectedDate">Entrega prevista</label>
+                        <input class="form-control" type="date" th:field="*{expectedDate}">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label" for="destLocationId">Entregar em</label>
+                        <select class="form-select" th:field="*{destLocationId}" required>
+                            <option th:each="l : ${locations}" th:value="${l.id}" th:text="${l.fullName}"></option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" for="origin">Documento de origem</label>
+                        <input class="form-control" th:field="*{origin}">
+                    </div>
+                </div>
+
+                <div data-lines>
+                    <table class="table table-sm o-lines">
+                        <thead><tr><th>Produto</th><th style="width: 140px" class="text-end">Quantidade</th>
+                            <th style="width: 150px" class="text-end">Preço unitário</th><th style="width: 140px" class="text-end">Subtotal</th><th style="width: 40px"></th></tr></thead>
+                        <tbody>
+                        <tr th:each="line, it : *{lines}">
+                            <td><select class="form-select form-select-sm" th:name="|lines[${it.index}].productId|">
+                                <option value="">Selecione...</option>
+                                <option th:each="p : ${products}" th:value="${p.id}" th:text="${p.displayName}"
+                                        th:with="cost=${@fmt.input(p.cost)}" th:data-cost="${cost}" th:selected="${p.id == line.productId}"></option>
+                            </select></td>
+                            <td><input class="form-control form-control-sm text-end" type="number" step="any" min="0"
+                                       th:name="|lines[${it.index}].quantity|" th:value="${@fmt.input(line.quantity)}"></td>
+                            <td><input class="form-control form-control-sm text-end" type="number" step="0.01" min="0"
+                                       th:name="|lines[${it.index}].unitPrice|" th:value="${@fmt.input(line.unitPrice)}"></td>
+                            <td class="text-end" data-subtotal></td>
+                            <td class="text-center"><button class="btn btn-link btn-sm text-muted p-0" data-remove-line th:if="${editable}" aria-label="Remover"><i class="bi bi-trash"></i></button></td>
+                        </tr>
+                        </tbody>
+                        <tfoot><tr><td colspan="3" class="text-end fw-semibold">Total</td><td class="text-end fw-semibold" data-total></td><td></td></tr></tfoot>
+                    </table>
+                    <a href="#" data-add-line th:if="${editable}">Adicionar um produto</a>
+                    <template>
+                        <tr>
+                            <td><select class="form-select form-select-sm" name="lines[0].productId">
+                                <option value="">Selecione...</option>
+                                <option th:each="p : ${products}" th:value="${p.id}" th:text="${p.displayName}" th:with="cost=${@fmt.input(p.cost)}" th:data-cost="${cost}"></option>
+                            </select></td>
+                            <td><input class="form-control form-control-sm text-end" type="number" step="any" min="0" name="lines[0].quantity"></td>
+                            <td><input class="form-control form-control-sm text-end" type="number" step="0.01" min="0" name="lines[0].unitPrice"></td>
+                            <td class="text-end" data-subtotal></td>
+                            <td class="text-center"><button class="btn btn-link btn-sm text-muted p-0" data-remove-line aria-label="Remover"><i class="bi bi-trash"></i></button></td>
+                        </tr>
+                    </template>
+                </div>
+                <div class="mt-3">
+                    <label class="form-label" for="notes">Termos e condições</label>
+                    <textarea class="form-control" rows="2" th:field="*{notes}"></textarea>
+                </div>
+            </fieldset>
+        </form>
+    </div>
+</main>
+</body>
+</html>

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout(title='Produtos', content=~{::main})}">
+<body>
+<main class="o-main">
+    <div class="o-control-panel">
+        <div class="o-cp-left">
+            <a class="btn btn-primary btn-sm" th:href="@{/products/new}">Novo</a>
+            <span class="o-cp-title">Produtos</span>
+        </div>
+        <div class="o-cp-center">
+            <div th:replace="~{fragments :: search('Buscar por nome, código ou código de barras...')}"></div>
+        </div>
+        <div class="o-cp-right">
+            <a class="btn btn-sm" th:classappend="${archived} ? 'btn-primary' : 'btn-secondary'"
+               th:with="url=${@fmt.withParam('archived', archived ? null : true)}" th:href="${url}">Arquivados</a>
+            <div th:replace="~{fragments :: pager(${page})}"></div>
+        </div>
+    </div>
+    <div class="o-with-panel">
+        <aside class="o-search-panel">
+            <h6><i class="bi bi-folder-fill"></i> Categoria</h6>
+            <ul>
+                <li><a th:with="url=${@fmt.withParam('category', null)}" th:href="${url}" th:classappend="${category == 0} ? 'active'">Todas</a></li>
+                <li th:each="c : ${categories}"><a th:with="url=${@fmt.withParam('category', c.id)}" th:href="${url}"
+                                                   th:classappend="${category == c.id} ? 'active'" th:text="${c.name}"></a></li>
+            </ul>
+        </aside>
+        <div class="o-content">
+            <table class="o-list" th:if="${page.hasContent()}">
+                <thead>
+                <tr><th>Código</th><th>Produto</th><th>Categoria</th><th>Rota</th><th>Fornecedor</th>
+                    <th class="num">Custo</th><th class="num">Preço de venda</th><th class="num">Em estoque</th><th>Un.</th></tr>
+                </thead>
+                <tbody>
+                <tr th:each="p : ${page.content}" th:attr="data-href=@{/products/{id}(id=${p.id})}">
+                    <td th:text="${p.sku}"></td>
+                    <td th:text="${p.name}"></td>
+                    <td class="muted" th:text="${p.category?.name}"></td>
+                    <td th:text="${p.route.label}"></td>
+                    <td class="muted" th:text="${p.supplier?.name}"></td>
+                    <td class="num" th:text="${@fmt.money(p.cost)}"></td>
+                    <td class="num" th:text="${@fmt.money(p.salePrice)}"></td>
+                    <td class="num" th:classappend="${onHand[p.id].signum() <= 0} ? 'text-negative'" th:text="${@fmt.qty(onHand[p.id])}"></td>
+                    <td class="muted" th:text="${p.uom}"></td>
+                </tr>
+                </tbody>
+            </table>
+            <div class="o-empty" th:unless="${page.hasContent()}">
+                <i class="bi bi-tags"></i>
+                <p>Nenhum produto encontrado.</p>
+                <a class="btn btn-primary btn-sm" th:href="@{/products/new}">Criar produto</a>
+            </div>
+        </div>
+    </div>
+</main>
+</body>
+</html>

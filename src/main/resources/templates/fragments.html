@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!-- Paginador "1-80 / 120" com setas anterior/próxima. -->
+<div th:fragment="pager(page)" class="o-pager" th:if="${page.totalElements > 0}">
+    <span th:text="|${page.number * page.size + 1}-${page.number * page.size + page.numberOfElements} / ${page.totalElements}|"></span>
+    <div class="btn-group">
+        <a class="btn btn-secondary btn-sm" th:classappend="${page.first} ? 'disabled'"
+           th:with="url=${page.first} ? '#' : ${@fmt.pageUrl(page.number - 1)}" th:href="${url}" aria-label="Anterior"><i class="bi bi-chevron-left"></i></a>
+        <a class="btn btn-secondary btn-sm" th:classappend="${page.last} ? 'disabled'"
+           th:with="url=${page.last} ? '#' : ${@fmt.pageUrl(page.number + 1)}" th:href="${url}" aria-label="Próxima"><i class="bi bi-chevron-right"></i></a>
+    </div>
+</div>
+
+<!-- Campo de busca que preserva os demais parâmetros da URL. -->
+<form th:fragment="search(placeholder)" class="o-search" method="get" th:action="${currentPath}">
+    <i class="bi bi-search"></i>
+    <input type="search" name="q" class="form-control form-control-sm" th:placeholder="${placeholder}"
+           th:value="${q}" autocomplete="off">
+    <input th:each="p : ${@fmt.filterParams()}" type="hidden" th:name="${p.key}" th:value="${p.value}">
+</form>
+
+<!-- Barra de status no estilo do Odoo. -->
+<div th:fragment="statusbar(states, current)" class="o-statusbar">
+    <span th:each="s : ${states}" th:text="${s.label}" th:classappend="${s == current} ? 'current'"></span>
+</div>
+
+</body>
+</html>

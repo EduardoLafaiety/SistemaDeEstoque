@@ -53,6 +53,8 @@ export interface FiltroProdutos {
   busca?: string;
   categoriaId?: number | null;
   baixoEstoque?: boolean;
+  /** Inclui os inativos junto com os ativos. */
+  inativos?: boolean;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -72,14 +74,21 @@ export class ProdutoService {
   atualizar(id: number, produto: ProdutoInput) {
     return this.http.put<Produto>(`${this.url}/${id}`, produto);
   }
+  /** Exclui o produto; se ele tiver movimentações, o backend apenas o inativa. */
   excluir(id: number) {
     return this.http.delete<void>(`${this.url}/${id}`);
+  }
+  reativar(id: number) {
+    return this.http.post<Produto>(`${this.url}/${id}/reativar`, null);
   }
 }
 
 export interface FiltroMovimentacoes {
   produtoId?: number | null;
   tipo?: TipoMovimentacao | '';
+  /** Datas AAAA-MM-DD, inclusivas (comparadas com a data UTC do registro). */
+  inicio?: string;
+  fim?: string;
   limite?: number;
 }
 
