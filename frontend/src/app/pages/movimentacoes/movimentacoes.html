@@ -1,0 +1,105 @@
+<div class="cabecalho">
+  <h1>Movimentações</h1>
+</div>
+
+<div class="grid colunas">
+  <form class="card registro" [formGroup]="form" (ngSubmit)="registrar()">
+    <h2>Registrar movimentação</h2>
+
+    <div class="tipos" role="radiogroup" aria-label="Tipo">
+      <label [class.ativo]="form.controls.tipo.value === 'ENTRADA'" class="entrada">
+        <input type="radio" formControlName="tipo" value="ENTRADA" /> ↓ Entrada
+      </label>
+      <label [class.ativo]="form.controls.tipo.value === 'SAIDA'" class="saida">
+        <input type="radio" formControlName="tipo" value="SAIDA" /> ↑ Saída
+      </label>
+    </div>
+
+    <div class="campo">
+      <label for="produto">Produto *</label>
+      <select id="produto" formControlName="produtoId">
+        <option [ngValue]="null" disabled>Selecione…</option>
+        @for (p of produtos(); track p.id) {
+          <option [ngValue]="p.id">{{ p.sku }} — {{ p.nome }}</option>
+        }
+      </select>
+      @if (produtoSelecionado(); as p) {
+        <span class="suave saldo">
+          Saldo atual: <strong>{{ p.quantidade }}</strong> un. · mínimo {{ p.estoqueMinimo }}
+        </span>
+      }
+    </div>
+
+    <div class="campo">
+      <label for="qtd">Quantidade *</label>
+      <input id="qtd" type="number" min="1" step="1" formControlName="quantidade" />
+      @if (form.controls.quantidade.invalid && form.controls.quantidade.touched) {
+        <span class="erro-campo">Informe uma quantidade inteira maior que zero.</span>
+      }
+    </div>
+
+    <div class="campo">
+      <label for="obs">Observação</label>
+      <input id="obs" formControlName="observacao" placeholder="ex.: NF 1234, venda, ajuste…" />
+    </div>
+
+    <button class="btn primario" type="submit" [disabled]="salvando()">
+      {{ salvando() ? 'Registrando…' : 'Registrar' }}
+    </button>
+  </form>
+
+  <div class="card">
+    <h2>Histórico</h2>
+    <div class="filtros">
+      <select [(ngModel)]="filtroProdutoId" (ngModelChange)="carregarHistorico()" aria-label="Filtrar por produto">
+        <option [ngValue]="null">Todos os produtos</option>
+        @for (p of produtos(); track p.id) {
+          <option [ngValue]="p.id">{{ p.nome }}</option>
+        }
+      </select>
+      <select [(ngModel)]="filtroTipo" (ngModelChange)="carregarHistorico()" aria-label="Filtrar por tipo">
+        <option value="">Entradas e saídas</option>
+        <option value="ENTRADA">Só entradas</option>
+        <option value="SAIDA">Só saídas</option>
+      </select>
+    </div>
+
+    <div class="tabela-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Data</th>
+            <th>Tipo</th>
+            <th>Produto</th>
+            <th class="num">Qtd.</th>
+            <th>Observação</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (m of movimentacoes(); track m.id) {
+            <tr>
+              <td class="suave">{{ m.criadoEm | dataUtc | date: 'dd/MM/yyyy HH:mm' }}</td>
+              <td>
+                <span class="tag" [class.entrada]="m.tipo === 'ENTRADA'" [class.saida]="m.tipo === 'SAIDA'">
+                  {{ m.tipo === 'ENTRADA' ? 'Entrada' : 'Saída' }}
+                </span>
+              </td>
+              <td>
+                {{ m.produtoNome }}
+                <div class="suave"><code>{{ m.produtoSku }}</code></div>
+              </td>
+              <td class="num">{{ m.tipo === 'ENTRADA' ? '+' : '−' }}{{ m.quantidade }}</td>
+              <td>{{ m.observacao ?? '—' }}</td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="5" class="vazio">
+                {{ carregando() ? 'Carregando…' : 'Nenhuma movimentação encontrada.' }}
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

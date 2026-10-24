@@ -1,0 +1,91 @@
+<div class="cabecalho">
+  <h1>Dashboard</h1>
+  <div>
+    <a class="btn" routerLink="/movimentacoes">⇅ Registrar movimentação</a>
+    <a class="btn primario" routerLink="/produtos/novo">+ Novo produto</a>
+  </div>
+</div>
+
+@if (carregando()) {
+  <p class="suave">Carregando…</p>
+} @else if (dados(); as d) {
+  <section class="grid kpis">
+    <div class="card kpi">
+      <span class="suave">Produtos cadastrados</span>
+      <strong>{{ d.totalProdutos | number }}</strong>
+    </div>
+    <div class="card kpi">
+      <span class="suave">Itens em estoque</span>
+      <strong>{{ d.totalItens | number }}</strong>
+    </div>
+    <div class="card kpi">
+      <span class="suave">Valor em estoque</span>
+      <strong>{{ d.valorTotal | currency }}</strong>
+    </div>
+    <div class="card kpi" [class.alerta]="d.produtosBaixoEstoque > 0">
+      <span class="suave">Abaixo do mínimo</span>
+      <strong>{{ d.produtosBaixoEstoque | number }}</strong>
+    </div>
+  </section>
+
+  <section class="grid paineis">
+    <div class="card">
+      <h2>Produtos com estoque baixo</h2>
+      @if (d.baixoEstoque.length) {
+        <div class="tabela-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Produto</th>
+                <th class="num">Atual</th>
+                <th class="num">Mínimo</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (p of d.baixoEstoque; track p.id) {
+                <tr>
+                  <td>
+                    <a [routerLink]="['/produtos', p.id]">{{ p.nome }}</a>
+                    <div class="suave"><code>{{ p.sku }}</code></div>
+                  </td>
+                  <td class="num"><span class="tag alerta">{{ p.quantidade }}</span></td>
+                  <td class="num">{{ p.estoqueMinimo }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        <a class="btn pequeno" routerLink="/produtos" [queryParams]="{ baixoEstoque: true }">Ver todos</a>
+      } @else {
+        <p class="vazio">Nenhum produto abaixo do estoque mínimo. 🎉</p>
+      }
+    </div>
+
+    <div class="card">
+      <h2>Últimas movimentações</h2>
+      @if (d.ultimasMovimentacoes.length) {
+        <div class="tabela-wrap">
+          <table>
+            <tbody>
+              @for (m of d.ultimasMovimentacoes; track m.id) {
+                <tr>
+                  <td>
+                    <span class="tag" [class.entrada]="m.tipo === 'ENTRADA'" [class.saida]="m.tipo === 'SAIDA'">
+                      {{ m.tipo === 'ENTRADA' ? 'Entrada' : 'Saída' }}
+                    </span>
+                  </td>
+                  <td>{{ m.produtoNome }}</td>
+                  <td class="num">{{ m.tipo === 'ENTRADA' ? '+' : '−' }}{{ m.quantidade }}</td>
+                  <td class="suave num">{{ m.criadoEm | dataUtc | date: 'dd/MM HH:mm' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        <a class="btn pequeno" routerLink="/movimentacoes">Ver histórico</a>
+      } @else {
+        <p class="vazio">Nenhuma movimentação registrada ainda.</p>
+      }
+    </div>
+  </section>
+}

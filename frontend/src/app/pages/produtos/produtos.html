@@ -1,0 +1,71 @@
+<div class="cabecalho">
+  <h1>Produtos</h1>
+  <a class="btn primario" routerLink="/produtos/novo">+ Novo produto</a>
+</div>
+
+<div class="card">
+  <div class="filtros">
+    <input
+      type="search"
+      placeholder="Buscar por nome ou SKU…"
+      [(ngModel)]="busca"
+      (ngModelChange)="filtrar()"
+    />
+    <select [(ngModel)]="categoriaId" (ngModelChange)="filtrar()" aria-label="Categoria">
+      <option [ngValue]="null">Todas as categorias</option>
+      @for (c of categorias(); track c.id) {
+        <option [ngValue]="c.id">{{ c.nome }}</option>
+      }
+    </select>
+    <label class="check">
+      <input type="checkbox" [(ngModel)]="baixoEstoque" (ngModelChange)="filtrar()" />
+      Só estoque baixo
+    </label>
+  </div>
+
+  <div class="tabela-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>SKU</th>
+          <th>Produto</th>
+          <th>Categoria</th>
+          <th class="num">Preço</th>
+          <th class="num">Estoque</th>
+          <th class="num">Mínimo</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (p of produtos(); track p.id) {
+          <tr>
+            <td><code>{{ p.sku }}</code></td>
+            <td>
+              {{ p.nome }}
+              @if (p.descricao) {
+                <div class="suave">{{ p.descricao }}</div>
+              }
+            </td>
+            <td>{{ p.categoriaNome ?? '—' }}</td>
+            <td class="num">{{ p.preco | currency }}</td>
+            <td class="num">
+              <span class="tag" [class.alerta]="p.quantidade <= p.estoqueMinimo">{{ p.quantidade }}</span>
+            </td>
+            <td class="num">{{ p.estoqueMinimo }}</td>
+            <td class="acoes">
+              <a class="btn pequeno" routerLink="/movimentacoes" [queryParams]="{ produtoId: p.id }">⇅ Movimentar</a>
+              <a class="btn pequeno" [routerLink]="['/produtos', p.id]">Editar</a>
+              <button class="btn pequeno perigo" (click)="excluir(p)">Excluir</button>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="7" class="vazio">
+              {{ carregando() ? 'Carregando…' : 'Nenhum produto encontrado.' }}
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>

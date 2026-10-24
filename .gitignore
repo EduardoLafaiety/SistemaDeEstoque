@@ -1,0 +1,24 @@
+# Dependências e builds
+node_modules/
+target/
+dist/
+.angular/
+
+# Banco de dados local
+backend/data/
+*.db
+*.db-shm
+*.db-wal
+
+# Variáveis de ambiente
+.env
+.env.local
+
+# IDE / ferramentas
+.idea/
+*.iml
+.claude/
+
+# Sistema
+.DS_Store
+Thumbs.db
