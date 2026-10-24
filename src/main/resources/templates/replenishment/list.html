@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout(title='Reposição', content=~{::main})}">
+<body>
+<main class="o-main">
+    <!-- Formulários auxiliares (fora da tabela para evitar formulários aninhados). -->
+    <form id="bulk" method="post" th:action="@{/replenishment/order}"></form>
+    <form id="rowAction" method="post" th:action="@{/replenishment/order}"></form>
+    <form th:each="line : ${view.lines}" th:id="|qty-${line.rule.id}|" method="post"
+          th:action="@{/replenishment/{id}/quantities(id=${line.rule.id})}"></form>
+
+    <div class="o-control-panel">
+        <div class="o-cp-left">
+            <a class="btn btn-primary btn-sm" th:href="@{/replenishment/new}">Novo</a>
+            <button class="btn btn-primary btn-sm" form="bulk" type="submit" th:formaction="@{/replenishment/order}"
+                    data-needs-selection title="Pedir a quantidade sugerida das linhas selecionadas">Pedir</button>
+            <div class="dropdown d-inline-block" data-needs-selection>
+                <button class="btn btn-primary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">Adiar</button>
+                <ul class="dropdown-menu">
+                    <li><button class="dropdown-item" form="bulk" type="submit" th:formaction="@{/replenishment/snooze(period='day')}">1 dia</button></li>
+                    <li><button class="dropdown-item" form="bulk" type="submit" th:formaction="@{/replenishment/snooze(period='week')}">1 semana</button></li>
+                    <li><button class="dropdown-item" form="bulk" type="submit" th:formaction="@{/replenishment/snooze(period='month')}">1 mês</button></li>
+                </ul>
+            </div>
+            <button class="btn btn-primary btn-sm" form="bulk" type="submit" th:formaction="@{/replenishment/order(toMax=true)}"
+                    data-needs-selection title="Pedir o necessário para atingir o máximo">Pedir até o Máximo</button>
+            <span class="o-cp-title">Reposição</span>
+            <span class="o-selection"><span data-count>0</span> selecionado(s)
+                <button type="button" data-clear aria-label="Limpar seleção"><i class="bi bi-x-lg"></i></button></span>
+            <div class="dropdown d-inline-block" data-needs-selection>
+                <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                    <i class="bi bi-gear-fill"></i> Ações</button>
+                <ul class="dropdown-menu">
+                    <li><button class="dropdown-item" form="bulk" type="submit" th:formaction="@{/replenishment/trigger(trigger='AUTO')}">
+                        <i class="bi bi-arrow-repeat me-2"></i>Automatizar</button></li>
+                    <li><button class="dropdown-item" form="bulk" type="submit" th:formaction="@{/replenishment/trigger(trigger='MANUAL')}">
+                        <i class="bi bi-hand-index me-2"></i>Tornar manual</button></li>
+                    <li th:if="${snoozed}"><button class="dropdown-item" form="bulk" type="submit" th:formaction="@{/replenishment/unsnooze}">
+                        <i class="bi bi-alarm me-2"></i>Remover adiamento</button></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><button class="dropdown-item text-danger" form="bulk" type="submit" th:formaction="@{/replenishment/delete}"
+                                data-confirm="Excluir as regras selecionadas?"><i class="bi bi-trash me-2"></i>Excluir</button></li>
+                </ul>
+            </div>
+        </div>
+        <div class="o-cp-center">
+            <div th:replace="~{fragments :: search('Buscar produto...')}"></div>
+        </div>
+        <div class="o-cp-right">
+            <div class="btn-group btn-group-sm" role="group" aria-label="Filtros">
+                <a class="btn" th:classappend="${toOrder} ? 'btn-primary' : 'btn-secondary'"
+                   th:with="url=${@fmt.withParam('toOrder', toOrder ? null : true)}" th:href="${url}">A pedir</a>
+                <a class="btn" th:classappend="${snoozed} ? 'btn-primary' : 'btn-secondary'"
+                   th:with="url=${@fmt.withParam('snoozed', snoozed ? null : true)}" th:href="${url}">Adiados</a>
+            </div>
+            <form method="post" th:action="@{/replenishment/run}" class="d-inline" sec:authorize="hasRole('ADMIN')"
+                  xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+                <button class="btn btn-secondary btn-sm" type="submit" title="Executar agora as regras automáticas">
+                    <i class="bi bi-play-fill"></i></button>
+            </form>
+            <span class="o-pager" th:if="${!view.lines.isEmpty()}"
+                  th:text="|1-${view.lines.size()} / ${view.lines.size()}|"></span>
+        </div>
+    </div>
+
+    <div class="o-with-panel">
+        <aside class="o-search-panel">
+            <h6><i class="bi bi-folder-fill"></i> Locais</h6>
+            <ul>
+                <li><a th:with="url=${@fmt.withParam('location', null)}" th:href="${url}" th:classappend="${location == null} ? 'active'">
+                    Todos <span class="count" th:text="${view.allLocationsCount}"></span></a></li>
+                <li th:each="lc : ${view.locationCounts}">
+                    <a th:with="url=${@fmt.withParam('location', lc.location.id)}" th:href="${url}"
+                       th:classappend="${location == lc.location.id} ? 'active'"
+                       th:style="|padding-left: ${0.5 + lc.location.depth * 0.75}rem|" th:title="${lc.location.fullName}">
+                        <span class="text-truncate"><i class="bi bi-caret-down-fill small text-muted" th:if="${lc.location.usage.name() == 'VIEW'}"></i>
+                            <span th:text="${lc.location.fullName}"></span></span>
+                        <span class="count" th:text="${lc.count}"></span></a>
+                </li>
+            </ul>
+            <h6><i class="bi bi-folder-fill"></i> Gatilho</h6>
+            <ul>
+                <li><a th:with="url=${@fmt.withParam('trigger', null)}" th:href="${url}" th:classappend="${trigger == null} ? 'active'">
+                    Todos <span class="count" th:text="${view.allTriggersCount}"></span></a></li>
+                <li><a th:with="url=${@fmt.withParam('trigger', 'AUTO')}" th:href="${url}" th:classappend="${trigger?.name() == 'AUTO'} ? 'active'">
+                    Automático <span class="count" th:text="${view.autoCount}"></span></a></li>
+                <li><a th:with="url=${@fmt.withParam('trigger', 'MANUAL')}" th:href="${url}" th:classappend="${trigger?.name() == 'MANUAL'} ? 'active'">
+                    Manual <span class="count" th:text="${view.manualCount}"></span></a></li>
+            </ul>
+        </aside>
+
+        <div class="o-content">
+            <table class="o-list" data-selectable th:if="${!view.lines.isEmpty()}">
+                <thead>
+                <tr>
+                    <th class="check"><input class="form-check-input" type="checkbox" data-select-all aria-label="Selecionar tudo"></th>
+                    <th>Produto</th>
+                    <th>Local</th>
+                    <th class="num">Em estoque</th>
+                    <th class="num">Previsto</th>
+                    <th></th>
+                    <th>Rota</th>
+                    <th></th>
+                    <th class="num">Mín.</th>
+                    <th class="num">Máx.</th>
+                    <th class="num">A pedir</th>
+                    <th></th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="line : ${view.lines}" th:with="rule=${line.rule}, product=${line.rule.product}">
+                    <td class="check"><input class="form-check-input" type="checkbox" name="ids" form="bulk"
+                                             th:value="${rule.id}" aria-label="Selecionar"></td>
+                    <td><a th:href="@{/replenishment/{id}(id=${rule.id})}" class="text-reset" th:text="${product.displayName}"></a></td>
+                    <td class="muted" th:text="${rule.location.fullName}"></td>
+                    <td class="num" th:text="${@fmt.qty(line.onHand)}"></td>
+                    <td class="num" th:classappend="${line.forecast.signum() < 0} ? 'text-negative'" th:text="${@fmt.qty(line.forecast)}"></td>
+                    <td><a th:href="@{/products/{id}/forecast(id=${product.id}, location=${rule.location.id})}"
+                           title="Relatório de previsão"><i class="bi bi-bar-chart-fill"></i></a></td>
+                    <td th:text="${product.route.label}"></td>
+                    <td>
+                        <i class="bi bi-info-circle-fill" style="color: var(--o-action)" data-bs-toggle="tooltip"
+                           th:title="|${product.route.name() == 'BUY' ? 'Fornecedor: ' + (product.supplier != null ? product.supplier.name : 'não definido') : 'Fabricação própria'} · Prazo: ${product.leadTimeDays} dia(s) · Em ${product.route.name() == 'BUY' ? 'cotação' : 'rascunho'}: ${@fmt.qty(line.inProgress)}|"></i>
+                    </td>
+                    <td class="num"><input class="o-inline" type="number" step="any" min="0" name="minQty" data-autosubmit
+                                           th:form="|qty-${rule.id}|" th:value="${@fmt.input(rule.minQty)}" aria-label="Mínimo"></td>
+                    <td class="num"><input class="o-inline" type="number" step="any" min="0" name="maxQty" data-autosubmit
+                                           th:form="|qty-${rule.id}|" th:value="${@fmt.input(rule.maxQty)}" aria-label="Máximo"></td>
+                    <td class="num" th:classappend="${line.needsOrder} ? 'fw-semibold'" th:text="${@fmt.qty(line.toOrder)}"></td>
+                    <td class="text-nowrap">
+                        <button class="btn-link-action" type="submit" form="rowAction" name="ids" th:value="${rule.id}"
+                                th:formaction="@{/replenishment/order}" th:if="${line.needsOrder}">
+                            <i class="bi bi-truck"></i> Pedir uma vez</button>
+                        <button class="btn-link-action" type="submit" form="rowAction" name="ids" th:value="${rule.id}"
+                                th:formaction="@{/replenishment/trigger(trigger='AUTO')}"
+                                th:if="${rule.trigger.name() == 'MANUAL' and line.needsOrder}">
+                            <i class="bi bi-arrow-repeat"></i> Automatizar</button>
+                        <span class="dropdown" th:if="${!snoozed and line.needsOrder}">
+                            <button class="btn-link-muted dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                <i class="bi bi-alarm"></i> Adiar</button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><button class="dropdown-item" type="submit" form="rowAction" name="ids" th:value="${rule.id}"
+                                            th:formaction="@{/replenishment/snooze(period='day')}">1 dia</button></li>
+                                <li><button class="dropdown-item" type="submit" form="rowAction" name="ids" th:value="${rule.id}"
+                                            th:formaction="@{/replenishment/snooze(period='week')}">1 semana</button></li>
+                                <li><button class="dropdown-item" type="submit" form="rowAction" name="ids" th:value="${rule.id}"
+                                            th:formaction="@{/replenishment/snooze(period='month')}">1 mês</button></li>
+                            </ul>
+                        </span>
+                        <span th:if="${snoozed}" class="muted small">
+                            até <span th:text="${@fmt.date(rule.snoozedUntil)}"></span>
+                            <button class="btn-link-action" type="submit" form="rowAction" name="ids" th:value="${rule.id}"
+                                    th:formaction="@{/replenishment/unsnooze}">Reativar</button>
+                        </span>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+            <div class="o-empty" th:if="${view.lines.isEmpty()}">
+                <i class="bi bi-arrow-repeat"></i>
+                <p class="mb-1 fw-semibold">Nenhuma linha de reposição.</p>
+                <p>Crie regras de mínimo/máximo para que o sistema sugira compras e produções automaticamente.</p>
+                <a class="btn btn-primary btn-sm" th:href="@{/replenishment/new}">Nova regra</a>
+            </div>
+        </div>
+    </div>
+</main>
+</body>
+</html>

@@ -24,10 +24,11 @@ export class ProdutoFormPage implements OnInit {
   protected readonly categorias = signal<Categoria[]>([]);
   protected readonly salvando = signal(false);
   protected readonly quantidadeAtual = signal<number | null>(null);
+  protected readonly ativo = signal(true);
 
   protected readonly form = this.fb.group({
-    sku: ['', [Validators.required, Validators.maxLength(40)]],
-    nome: ['', [Validators.required, Validators.maxLength(120)]],
+    sku: ['', [Validators.required, Validators.maxLength(60)]],
+    nome: ['', [Validators.required, Validators.maxLength(200)]],
     descricao: [''],
     categoriaId: this.fb.control<number | null>(null),
     preco: this.fb.control<number | null>(null, [Validators.required, Validators.min(0)]),
@@ -48,6 +49,7 @@ export class ProdutoFormPage implements OnInit {
         next: (p) => {
           this.form.patchValue({ ...p, descricao: p.descricao ?? '' });
           this.quantidadeAtual.set(p.quantidade);
+          this.ativo.set(p.ativo);
         },
         error: () => this.router.navigate(['/produtos']),
       });
@@ -57,6 +59,13 @@ export class ProdutoFormPage implements OnInit {
   protected invalido(campo: keyof typeof this.form.controls) {
     const c = this.form.controls[campo];
     return c.invalid && c.touched;
+  }
+
+  protected reativar() {
+    this.produtosApi.reativar(Number(this.id())).subscribe(() => {
+      this.ativo.set(true);
+      this.toast.sucesso('Produto reativado.');
+    });
   }
 
   protected salvar() {

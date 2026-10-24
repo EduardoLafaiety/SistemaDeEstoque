@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout(title='Relatório de estoque', content=~{::main})}">
+<body>
+<main class="o-main">
+    <div class="o-control-panel">
+        <div class="o-cp-left">
+            <a class="btn btn-secondary btn-sm" th:href="@{/reports/stock.csv(location=${location}, q=${q})}"><i class="bi bi-download"></i> Exportar CSV</a>
+            <span class="o-cp-title">Estoque</span>
+        </div>
+        <div class="o-cp-center">
+            <div th:replace="~{fragments :: search('Buscar produto...')}"></div>
+        </div>
+        <div class="o-cp-right">
+            <div th:replace="~{fragments :: pager(${page})}"></div>
+        </div>
+    </div>
+    <div class="o-with-panel">
+        <aside class="o-search-panel">
+            <h6><i class="bi bi-folder-fill"></i> Locais</h6>
+            <ul>
+                <li><a th:with="url=${@fmt.withParam('location', null)}" th:href="${url}" th:classappend="${location == null} ? 'active'">Todos</a></li>
+                <li th:each="l : ${locations}" th:if="${l.usage.name() == 'INTERNAL' or l.usage.name() == 'VIEW'}">
+                    <a th:with="url=${@fmt.withParam('location', l.id)}" th:href="${url}" th:classappend="${location == l.id} ? 'active'"
+                       th:style="|padding-left: ${0.5 + l.depth * 0.75}rem|" th:text="${l.fullName}"></a></li>
+            </ul>
+        </aside>
+        <div class="o-content">
+            <table class="o-list" th:if="${page.hasContent()}">
+                <thead><tr><th>Produto</th><th>Local</th><th class="num">Quantidade</th><th>Un.</th><th class="num">Custo unitário</th><th class="num">Valor</th></tr></thead>
+                <tbody>
+                <tr th:each="q : ${page.content}" th:attr="data-href=@{/products/{id}(id=${q.product.id})}">
+                    <td th:text="${q.product.displayName}"></td>
+                    <td class="muted" th:text="${q.location.fullName}"></td>
+                    <td class="num" th:classappend="${q.quantity.signum() < 0} ? 'text-negative'" th:text="${@fmt.qty(q.quantity)}"></td>
+                    <td class="muted" th:text="${q.product.uom}"></td>
+                    <td class="num" th:text="${@fmt.money(q.product.cost)}"></td>
+                    <td class="num" th:text="${@fmt.money(q.value)}"></td>
+                </tr>
+                </tbody>
+                <tfoot><tr><td colspan="5" class="text-end">Valor total em estoque (todos os locais)</td>
+                    <td class="num" th:text="${@fmt.money(totalValue)}"></td></tr></tfoot>
+            </table>
+            <div class="o-empty" th:unless="${page.hasContent()}">
+                <i class="bi bi-boxes"></i>
+                <p>Nenhum saldo encontrado.</p>
+            </div>
+        </div>
+    </div>
+</main>
+</body>
+</html>

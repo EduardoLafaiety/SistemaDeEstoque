@@ -1,0 +1,122 @@
+.tabela-wrap {
+  container-type: inline-size;
+}
+
+.tabela-produtos td.sku {
+  white-space: nowrap;
+}
+
+/* Abaixo de ~860px a tabela não cabe com as ações: cada produto vira um cartão. */
+@container (max-width: 860px) {
+  .tabela-produtos {
+    thead {
+      display: none;
+    }
+
+    tbody tr {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr)) auto;
+      grid-template-areas:
+        'nome nome nome estoque'
+        'sku categoria preco minimo'
+        'acoes acoes acoes acoes';
+      gap: 4px 12px;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--borda);
+    }
+
+    tbody tr:last-child {
+      border-bottom: 0;
+    }
+
+    tbody tr:hover {
+      background: none;
+    }
+
+    td {
+      padding: 0;
+      border: 0;
+      text-align: left;
+    }
+
+    td[data-rotulo]::before {
+      content: attr(data-rotulo);
+      display: block;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      color: var(--texto-suave);
+    }
+
+    td.nome {
+      grid-area: nome;
+      font-weight: 600;
+
+      .suave {
+        font-weight: 400;
+      }
+    }
+    td.sku {
+      grid-area: sku;
+      align-self: end;
+    }
+    td.categoria {
+      grid-area: categoria;
+    }
+    td.preco {
+      grid-area: preco;
+    }
+    td.estoque {
+      grid-area: estoque;
+      text-align: right;
+
+      &::before {
+        display: none;
+      }
+    }
+    td.minimo {
+      grid-area: minimo;
+      text-align: right;
+    }
+    td.acoes {
+      grid-area: acoes;
+      margin-top: 6px;
+      text-align: left;
+      white-space: normal;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+
+      .btn + .btn {
+        margin-left: 0;
+      }
+    }
+
+    td.vazio {
+      grid-column: 1 / -1;
+      text-align: center;
+    }
+  }
+}
+
+/* Celular: SKU, categoria e preço empilham em duas colunas. */
+@container (max-width: 420px) {
+  .tabela-produtos tbody tr {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      'nome estoque'
+      'sku minimo'
+      'categoria preco'
+      'acoes acoes';
+  }
+
+  .tabela-produtos td.preco {
+    text-align: right;
+  }
+}
+
+.tabela-produtos tr.inativo {
+  td:not(.acoes) {
+    opacity: 0.6;
+  }
+}

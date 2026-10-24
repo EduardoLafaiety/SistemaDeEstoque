@@ -33,3 +33,17 @@
     grid-column: auto;
   }
 }
+
+.aviso-inativo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  max-width: 860px;
+  margin-bottom: 16px;
+  padding: 12px 16px;
+  background: #fef3c7;
+  border-color: #fcd34d;
+  color: #92400e;
+}

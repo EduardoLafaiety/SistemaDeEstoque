@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout(title='Categorias', content=~{::main})}">
+<body>
+<main class="o-main">
+    <div class="o-control-panel">
+        <div class="o-cp-left"><span class="o-cp-title">Categorias de produto</span></div>
+        <div></div><div></div>
+    </div>
+    <div class="o-form-view">
+        <div class="o-form-sheet" style="max-width: 720px">
+            <table class="o-list mb-4">
+                <thead><tr><th>Nome</th><th style="width: 60px"></th></tr></thead>
+                <tbody>
+                <tr th:each="c : ${categories}">
+                    <td>
+                        <form method="post" th:action="@{/config/categories}" class="d-flex gap-2">
+                            <input type="hidden" name="id" th:value="${c.id}">
+                            <input class="form-control form-control-sm" name="name" th:value="${c.name}" required aria-label="Nome">
+                            <button class="btn btn-secondary btn-sm" type="submit">Salvar</button>
+                        </form>
+                    </td>
+                    <td>
+                        <form method="post" th:action="@{/config/categories/{id}/delete(id=${c.id})}">
+                            <button class="btn btn-link btn-sm text-muted" type="submit" data-confirm="Excluir esta categoria?" aria-label="Excluir">
+                                <i class="bi bi-trash"></i></button>
+                        </form>
+                    </td>
+                </tr>
+                <tr th:if="${categories.isEmpty()}"><td colspan="2" class="muted">Nenhuma categoria.</td></tr>
+                </tbody>
+            </table>
+            <form method="post" th:action="@{/config/categories}" class="d-flex gap-2">
+                <input class="form-control" name="name" required placeholder="Nova categoria" aria-label="Nova categoria">
+                <button class="btn btn-primary" type="submit">Adicionar</button>
+            </form>
+        </div>
+    </div>
+</main>
+</body>
+</html>

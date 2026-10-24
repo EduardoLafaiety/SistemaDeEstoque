@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout(title=${form.id == null ? 'Novo usuário' : form.fullName}, content=~{::main})}">
+<body>
+<main class="o-main">
+    <div class="o-control-panel">
+        <div class="o-cp-left">
+            <span class="o-cp-title"><a class="bc" th:href="@{/config/users}">Usuários</a> /
+                <span th:text="${form.id == null} ? 'Novo' : ${form.fullName}"></span></span>
+        </div>
+        <div></div>
+        <div class="o-cp-right">
+            <button class="btn btn-primary btn-sm" type="submit" form="userForm">Salvar</button>
+            <a class="btn btn-secondary btn-sm" th:href="@{/config/users}">Descartar</a>
+        </div>
+    </div>
+    <div class="o-form-view">
+        <form id="userForm" class="o-form-sheet" style="max-width: 760px" method="post" th:action="@{/config/users/save}" th:object="${form}">
+            <input type="hidden" th:field="*{id}">
+            <div class="alert alert-danger" th:if="${#fields.hasAnyErrors()}">
+                <div th:each="e : ${#fields.allErrors()}" th:text="${e}"></div>
+            </div>
+            <div class="row g-3">
+                <div class="col-md-6"><label class="form-label" for="fullName">Nome</label>
+                    <input class="form-control" th:field="*{fullName}" required></div>
+                <div class="col-md-6"><label class="form-label" for="username">Login</label>
+                    <input class="form-control" th:field="*{username}" required autocomplete="off"></div>
+                <div class="col-md-6"><label class="form-label" for="role">Perfil</label>
+                    <select class="form-select" th:field="*{role}">
+                        <option th:each="r : ${roles}" th:value="${r}" th:text="${r.label}"></option>
+                    </select></div>
+                <div class="col-md-6"><label class="form-label" for="password" th:text="${form.id == null} ? 'Senha' : 'Nova senha'">Senha</label>
+                    <input class="form-control" type="password" th:field="*{password}" autocomplete="new-password" minlength="6"
+                           th:required="${form.id == null}" th:placeholder="${form.id == null} ? '' : 'Deixe em branco para manter'"></div>
+                <div class="col-12"><div class="form-check"><input class="form-check-input" type="checkbox" th:field="*{active}">
+                    <label class="form-check-label" th:for="${#ids.prev('active')}">Ativo</label></div></div>
+            </div>
+            <p class="text-muted small mt-3 mb-0">Administradores acessam o menu Configuração; usuários comuns operam o estoque.</p>
+        </form>
+    </div>
+</main>
+</body>
+</html>

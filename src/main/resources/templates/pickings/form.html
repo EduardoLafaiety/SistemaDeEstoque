@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout(title=${picking != null ? picking.reference : 'Nova operação'}, content=~{::main})}">
+<body>
+<main class="o-main" th:with="editable=${picking == null or picking.editable}">
+    <div class="o-control-panel">
+        <div class="o-cp-left">
+            <span class="o-cp-title"><a class="bc" th:href="@{/pickings(type=${form.type})}" th:text="${form.type.pluralLabel}"></a> /
+                <span th:text="${picking != null} ? ${picking.reference} : 'Novo'"></span></span>
+        </div>
+        <div></div>
+        <div class="o-cp-right" th:if="${editable}">
+            <button class="btn btn-primary btn-sm" type="submit" form="pickingForm">Salvar</button>
+            <a class="btn btn-secondary btn-sm" th:href="@{/pickings(type=${form.type})}">Descartar</a>
+        </div>
+    </div>
+    <div class="o-form-view">
+        <div class="o-form-statusbar" th:if="${picking != null}">
+            <div class="d-flex gap-2 flex-wrap">
+                <form th:if="${picking.state.name() == 'DRAFT'}" method="post" th:action="@{/pickings/{id}/confirm(id=${picking.id})}">
+                    <button class="btn btn-primary btn-sm" type="submit">Marcar como a fazer</button></form>
+                <form th:if="${picking.editable}" method="post" th:action="@{/pickings/{id}/validate(id=${picking.id})}">
+                    <button class="btn btn-sm" th:classappend="${picking.state.name() == 'READY'} ? 'btn-primary' : 'btn-secondary'"
+                            type="submit" data-confirm="Validar a operação e atualizar o estoque?">Validar</button></form>
+                <form th:if="${picking.editable}" method="post" th:action="@{/pickings/{id}/cancel(id=${picking.id})}">
+                    <button class="btn btn-secondary btn-sm" type="submit" data-confirm="Cancelar esta operação?">Cancelar</button></form>
+                <form th:if="${picking.state.name() == 'DRAFT' or picking.state.name() == 'CANCELLED'}" method="post"
+                      th:action="@{/pickings/{id}/delete(id=${picking.id})}">
+                    <button class="btn btn-secondary btn-sm" type="submit" data-confirm="Excluir esta operação?"><i class="bi bi-trash"></i></button></form>
+                <a th:if="${picking.purchaseOrder != null}" class="btn btn-secondary btn-sm"
+                   th:href="@{/purchases/{id}(id=${picking.purchaseOrder.id})}"><i class="bi bi-cart"></i> <span th:text="${picking.purchaseOrder.reference}"></span></a>
+            </div>
+            <th:block th:with="states=${T(com.estoque.domain.PickingState).values()}"><div th:replace="~{fragments :: statusbar(${states}, ${picking.state})}"></div></th:block>
+        </div>
+
+        <form id="pickingForm" class="o-form-sheet" method="post" th:action="@{/pickings/save}" th:object="${form}">
+            <input type="hidden" th:field="*{id}">
+            <input type="hidden" th:field="*{type}">
+            <div class="alert alert-danger" th:if="${#fields.hasAnyErrors()}">
+                <div th:each="e : ${#fields.allErrors()}" th:text="${e}"></div>
+            </div>
+            <h1 th:text="${picking != null} ? ${picking.reference} : ${form.type.label}"></h1>
+            <fieldset th:disabled="${!editable}">
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <label class="form-label" for="partnerId" th:text="${form.type.name() == 'RECEIPT'} ? 'Recebido de' : (${form.type.name() == 'DELIVERY'} ? 'Endereço de entrega' : 'Parceiro')">Parceiro</label>
+                        <select class="form-select" th:field="*{partnerId}">
+                            <option value="">—</option>
+                            <option th:each="p : ${partners}" th:value="${p.id}" th:text="${p.name}"></option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" for="scheduledDate">Data programada</label>
+                        <input class="form-control" type="datetime-local" th:field="*{scheduledDate}" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" for="sourceLocationId">Local de origem</label>
+                        <select class="form-select" th:field="*{sourceLocationId}" required>
+                            <option th:each="l : ${locations}" th:value="${l.id}" th:text="${l.fullName}"></option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" for="destLocationId">Local de destino</label>
+                        <select class="form-select" th:field="*{destLocationId}" required>
+                            <option th:each="l : ${locations}" th:value="${l.id}" th:text="${l.fullName}"></option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" for="origin">Documento de origem</label>
+                        <input class="form-control" th:field="*{origin}" placeholder="ex.: Pedido 1234">
+                    </div>
+                </div>
+
+                <ul class="nav nav-tabs mb-2">
+                    <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-ops" type="button">Operações</button></li>
+                    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-notes" type="button">Observações</button></li>
+                </ul>
+                <div class="tab-content">
+                    <div class="tab-pane fade show active" id="tab-ops" data-lines>
+                        <table class="table table-sm o-lines">
+                            <thead><tr><th>Produto</th><th style="width: 180px" class="text-end">Quantidade</th><th style="width: 40px"></th></tr></thead>
+                            <tbody>
+                            <tr th:each="line, it : *{lines}">
+                                <td><select class="form-select form-select-sm" th:name="|lines[${it.index}].productId|">
+                                    <option value="">Selecione...</option>
+                                    <option th:each="p : ${products}" th:value="${p.id}" th:text="${p.displayName}"
+                                            th:selected="${p.id == line.productId}"></option>
+                                </select></td>
+                                <td><input class="form-control form-control-sm text-end" type="number" step="any" min="0"
+                                           th:name="|lines[${it.index}].quantity|" th:value="${@fmt.input(line.quantity)}"></td>
+                                <td class="text-center"><button class="btn btn-link btn-sm text-muted p-0" data-remove-line th:if="${editable}" aria-label="Remover"><i class="bi bi-trash"></i></button></td>
+                            </tr>
+                            </tbody>
+                        </table>
+                        <a href="#" data-add-line th:if="${editable}">Adicionar uma linha</a>
+                        <template>
+                            <tr>
+                                <td><select class="form-select form-select-sm" name="lines[0].productId">
+                                    <option value="">Selecione...</option>
+                                    <option th:each="p : ${products}" th:value="${p.id}" th:text="${p.displayName}"></option>
+                                </select></td>
+                                <td><input class="form-control form-control-sm text-end" type="number" step="any" min="0" name="lines[0].quantity"></td>
+                                <td class="text-center"><button class="btn btn-link btn-sm text-muted p-0" data-remove-line aria-label="Remover"><i class="bi bi-trash"></i></button></td>
+                            </tr>
+                        </template>
+                    </div>
+                    <div class="tab-pane fade" id="tab-notes">
+                        <textarea class="form-control" rows="4" th:field="*{notes}" placeholder="Observações internas"></textarea>
+                    </div>
+                </div>
+            </fieldset>
+            <p class="text-muted small mt-3 mb-0" th:if="${picking != null}">
+                Criado por <span th:text="${picking.createdBy ?: 'sistema'}"></span> em <span th:text="${@fmt.dateTime(picking.createdAt)}"></span>
+                <span th:if="${picking.doneDate != null}"> · concluído em <span th:text="${@fmt.dateTime(picking.doneDate)}"></span></span>
+            </p>
+        </form>
+    </div>
+</main>
+</body>
+</html>

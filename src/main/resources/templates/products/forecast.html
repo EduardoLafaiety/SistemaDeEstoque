@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout(title='Previsão', content=~{::main})}">
+<body>
+<main class="o-main">
+    <div class="o-control-panel">
+        <div class="o-cp-left">
+            <span class="o-cp-title"><a class="bc" th:href="@{/products/{id}(id=${product.id})}" th:text="${product.displayName}"></a> / Previsão</span>
+        </div>
+        <div></div>
+        <div class="o-cp-right">
+            <form method="get" class="d-flex align-items-center gap-2">
+                <label for="location" class="text-muted small">Local</label>
+                <select id="location" name="location" class="form-select form-select-sm" onchange="this.form.submit()">
+                    <option th:each="l : ${locations}" th:value="${l.id}" th:text="${l.fullName}" th:selected="${l.id == location.id}"></option>
+                </select>
+            </form>
+        </div>
+    </div>
+    <div class="o-form-view">
+        <div class="o-form-sheet">
+            <div class="d-flex gap-3 mb-4 flex-wrap">
+                <div class="o-stat"><i class="bi bi-boxes"></i><span><strong th:text="${@fmt.qty(onHand)}"></strong><small>Em estoque</small></span></div>
+                <div class="o-stat"><i class="bi bi-graph-up-arrow"></i><span>
+                    <strong th:classappend="${forecast.signum() < 0} ? 'text-negative'" th:text="${@fmt.qty(forecast)}"></strong><small>Previsto</small></span></div>
+            </div>
+            <table class="o-list">
+                <thead><tr><th>Data</th><th>Referência</th><th>De</th><th>Para</th><th class="num">Entrada/Saída</th><th class="num">Saldo projetado</th></tr></thead>
+                <tbody>
+                <tr><td colspan="5" class="fw-semibold">Saldo atual</td><td class="num fw-semibold" th:text="${@fmt.qty(onHand)}"></td></tr>
+                <tr th:each="r : ${rows}">
+                    <td th:text="${@fmt.dateTime(r.move.date)}"></td>
+                    <td>
+                        <a th:if="${r.move.picking != null}" th:href="@{/pickings/{id}(id=${r.move.picking.id})}" th:text="${r.move.reference}"></a>
+                        <a th:if="${r.move.manufacturingOrder != null}" th:href="@{/production/{id}(id=${r.move.manufacturingOrder.id})}" th:text="${r.move.reference}"></a>
+                    </td>
+                    <td class="muted" th:text="${r.move.sourceLocation.fullName}"></td>
+                    <td class="muted" th:text="${r.move.destLocation.fullName}"></td>
+                    <td class="num" th:classappend="${r.delta.signum() < 0} ? 'text-negative' : 'text-success'"
+                        th:text="${(r.delta.signum() > 0 ? '+' : '') + @fmt.qty(r.delta)}"></td>
+                    <td class="num" th:classappend="${r.balance.signum() < 0} ? 'text-negative'" th:text="${@fmt.qty(r.balance)}"></td>
+                </tr>
+                <tr th:if="${rows.isEmpty()}"><td colspan="6" class="muted">Nenhuma entrada ou saída prevista.</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</main>
+</body>
+</html>

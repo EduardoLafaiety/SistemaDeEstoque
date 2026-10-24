@@ -3,10 +3,17 @@
   <a class="btn" routerLink="/produtos">← Voltar</a>
 </div>
 
+@if (editando && !ativo()) {
+  <div class="card aviso-inativo">
+    <span>Este produto está <strong>inativo</strong>: não aparece nas listas nem no dashboard e não pode ser movimentado.</span>
+    <button class="btn pequeno" type="button" (click)="reativar()">↺ Reativar</button>
+  </div>
+}
+
 <form class="card formulario" [formGroup]="form" (ngSubmit)="salvar()">
   <div class="campo">
     <label for="sku">SKU *</label>
-    <input id="sku" formControlName="sku" placeholder="ex.: ELE-003" autocomplete="off" />
+    <input id="sku" formControlName="sku" placeholder="ex.: ELE-003" autocomplete="off" maxlength="60" />
     @if (invalido('sku')) {
       <span class="erro-campo">Informe o SKU.</span>
     }
@@ -14,7 +21,7 @@
 
   <div class="campo largo">
     <label for="nome">Nome *</label>
-    <input id="nome" formControlName="nome" />
+    <input id="nome" formControlName="nome" maxlength="200" />
     @if (invalido('nome')) {
       <span class="erro-campo">Informe o nome do produto.</span>
     }
@@ -59,7 +66,7 @@
 
   <div class="campo largo">
     <label for="descricao">Descrição</label>
-    <textarea id="descricao" rows="3" formControlName="descricao"></textarea>
+    <textarea id="descricao" rows="3" formControlName="descricao" maxlength="1000"></textarea>
   </div>
 
   <div class="rodape">

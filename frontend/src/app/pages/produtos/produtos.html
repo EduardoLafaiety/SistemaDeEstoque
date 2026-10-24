@@ -21,10 +21,14 @@
       <input type="checkbox" [(ngModel)]="baixoEstoque" (ngModelChange)="filtrar()" />
       Só estoque baixo
     </label>
+    <label class="check">
+      <input type="checkbox" [(ngModel)]="inativos" (ngModelChange)="filtrar()" />
+      Mostrar inativos
+    </label>
   </div>
 
   <div class="tabela-wrap">
-    <table>
+    <table class="tabela-produtos">
       <thead>
         <tr>
           <th>SKU</th>
@@ -38,24 +42,32 @@
       </thead>
       <tbody>
         @for (p of produtos(); track p.id) {
-          <tr>
-            <td><code>{{ p.sku }}</code></td>
-            <td>
+          <tr [class.inativo]="!p.ativo">
+            <td class="sku"><code>{{ p.sku }}</code></td>
+            <td class="nome">
               {{ p.nome }}
+              @if (!p.ativo) {
+                <span class="tag">Inativo</span>
+              }
               @if (p.descricao) {
                 <div class="suave">{{ p.descricao }}</div>
               }
             </td>
-            <td>{{ p.categoriaNome ?? '—' }}</td>
-            <td class="num">{{ p.preco | currency }}</td>
-            <td class="num">
-              <span class="tag" [class.alerta]="p.quantidade <= p.estoqueMinimo">{{ p.quantidade }}</span>
+            <td class="categoria" data-rotulo="Categoria">{{ p.categoriaNome ?? '—' }}</td>
+            <td class="num preco" data-rotulo="Preço">{{ p.preco | currency }}</td>
+            <td class="num estoque" data-rotulo="Estoque">
+              <span class="tag" [class.alerta]="p.ativo && p.quantidade <= p.estoqueMinimo">{{ p.quantidade }}</span>
             </td>
-            <td class="num">{{ p.estoqueMinimo }}</td>
+            <td class="num minimo" data-rotulo="Mínimo">{{ p.estoqueMinimo }}</td>
             <td class="acoes">
-              <a class="btn pequeno" routerLink="/movimentacoes" [queryParams]="{ produtoId: p.id }">⇅ Movimentar</a>
-              <a class="btn pequeno" [routerLink]="['/produtos', p.id]">Editar</a>
-              <button class="btn pequeno perigo" (click)="excluir(p)">Excluir</button>
+              @if (p.ativo) {
+                <a class="btn pequeno" routerLink="/movimentacoes" [queryParams]="{ produtoId: p.id }">⇅ Movimentar</a>
+                <a class="btn pequeno" [routerLink]="['/produtos', p.id]">Editar</a>
+                <button class="btn pequeno perigo" (click)="excluir(p)">Excluir</button>
+              } @else {
+                <a class="btn pequeno" [routerLink]="['/produtos', p.id]">Editar</a>
+                <button class="btn pequeno" (click)="reativar(p)">↺ Reativar</button>
+              }
             </td>
           </tr>
         } @empty {

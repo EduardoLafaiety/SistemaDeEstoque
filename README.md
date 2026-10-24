@@ -63,10 +63,14 @@ dependências de runtime são `express` e `cors`.
 .
 ├── backend/                  # API REST (Node.js + Express + SQLite)
 │   ├── src/
-│   │   ├── server.js         # Ponto de entrada: middlewares e registro das rotas
-│   │   ├── db.js             # Conexão, schema, transações e dados de exemplo
+│   │   ├── server.js         # Ponto de entrada: sobe o HTTP e encerra com segurança
+│   │   ├── app.js            # App Express: middlewares e registro das rotas
+│   │   ├── config.js         # Lê .env / variáveis de ambiente
+│   │   ├── db.js             # Conexão, schema, migrações, transações e dados de exemplo
 │   │   ├── errors.js         # HttpError, validação e tratamento de erros
 │   │   └── routes/           # categorias, produtos, movimentacoes, dashboard
+│   ├── tests/                # Testes de integração da API (node:test)
+│   ├── .env.example          # Modelo de configuração
 │   └── data/                 # Banco SQLite (gerado em runtime, ignorado pelo git)
 │
 ├── frontend/                 # SPA Angular
@@ -133,6 +137,15 @@ npm run build
 
 Os arquivos gerados ficam em `frontend/dist/frontend/browser/`.
 
+### Testes do backend
+
+```bash
+cd backend
+npm test
+```
+
+Usa o runner nativo `node:test` com banco em memória: não toca em `backend/data/`.
+
 ### Testes do frontend
 
 ```bash
@@ -148,13 +161,15 @@ Pare o backend e apague a pasta `backend/data/`. Na próxima execução o banco 
 
 ## Configuração
 
-O backend lê variáveis de ambiente (todas opcionais):
+O backend lê variáveis de ambiente (todas opcionais). Elas também podem ficar em `backend/.env`
+(copie de `backend/.env.example`); variáveis já definidas no ambiente têm prioridade.
 
 | Variável      | Padrão                  | Descrição                                 |
 | ------------- | ----------------------- | ----------------------------------------- |
 | `PORT`        | `3000`                  | Porta HTTP da API                         |
-| `DB_PATH`     | `data/estoque.db`       | Caminho do arquivo SQLite                 |
+| `DB_PATH`     | `data/estoque.db`       | Caminho do SQLite, relativo a `backend/` (ou `:memory:`) |
 | `CORS_ORIGIN` | `http://localhost:4200` | Origem permitida pelo CORS                |
+| `SEED`        | `true`                  | Popula dados de exemplo se o banco estiver vazio |
 
 Exemplo (bash):
 
@@ -189,6 +204,7 @@ categorias 1 ──── N produtos 1 ──── N movimentacoes
 | `preco`          | REAL    | `>= 0`                                                  |
 | `quantidade`     | INTEGER | `>= 0`                                                  |
 | `estoque_minimo` | INTEGER | `>= 0`                                                  |
+| `ativo`          | INTEGER | `1` ativo, `0` inativado (excluído com histórico)       |
 | `criado_em`      | TEXT    | data/hora UTC                                           |
 | `atualizado_em`  | TEXT    | data/hora UTC                                           |
 
@@ -197,13 +213,16 @@ categorias 1 ──── N produtos 1 ──── N movimentacoes
 | Coluna       | Tipo    | Regras                                          |
 | ------------ | ------- | ----------------------------------------------- |
 | `id`         | INTEGER | PK, autoincremento                              |
-| `produto_id` | INTEGER | FK → `produtos`, `ON DELETE CASCADE`            |
+| `produto_id` | INTEGER | FK → `produtos` (`RESTRICT` em bancos novos)    |
 | `tipo`       | TEXT    | `ENTRADA` ou `SAIDA`                            |
 | `quantidade` | INTEGER | `> 0`                                           |
+| `quantidade_anterior`  | INTEGER | saldo antes da movimentação          |
+| `quantidade_posterior` | INTEGER | saldo depois da movimentação         |
 | `observacao` | TEXT    | opcional                                        |
 | `criado_em`  | TEXT    | data/hora UTC                                   |
 
-O banco roda com `foreign_keys = ON` e `journal_mode = WAL`.
+O banco roda com `foreign_keys = ON` e `journal_mode = WAL`. Bancos criados por versões anteriores
+recebem as colunas novas automaticamente na inicialização (migração aditiva, sem perda de dados).
 
 ## API REST
 
@@ -220,12 +239,14 @@ Base: `http://localhost:3000/api`. Todas as requisições e respostas usam JSON.
 | POST   | `/categorias`         | Cria uma categoria: `{ nome }`                               |
 | PUT    | `/categorias/:id`     | Renomeia uma categoria: `{ nome }`                           |
 | DELETE | `/categorias/:id`     | Remove a categoria; os produtos dela ficam sem categoria     |
-| GET    | `/produtos`           | Lista. Filtros: `busca`, `categoriaId`, `baixoEstoque=true`  |
+| GET    | `/produtos`           | Lista os ativos. Filtros: `busca`, `categoriaId`, `baixoEstoque=true`, `inativos=true` |
 | GET    | `/produtos/:id`       | Detalha um produto                                           |
 | POST   | `/produtos`           | Cria um produto (veja o corpo abaixo)                        |
 | PUT    | `/produtos/:id`       | Atualiza um produto (mesmo corpo, sem `quantidade`)          |
-| DELETE | `/produtos/:id`       | Remove o produto e o histórico de movimentações dele         |
-| GET    | `/movimentacoes`      | Lista. Filtros: `produtoId`, `tipo`, `limite` (padrão 100, máx. 500) |
+| DELETE | `/produtos/:id`       | Inativa o produto se tiver movimentações; senão, exclui      |
+| POST   | `/produtos/:id/reativar` | Reativa um produto inativado                              |
+| GET    | `/movimentacoes`      | Lista. Filtros: `produtoId`, `tipo`, `inicio`/`fim` (AAAA-MM-DD), `limite` (padrão 100, máx. 500) |
+| GET    | `/movimentacoes/:id`  | Detalha uma movimentação                                     |
 | POST   | `/movimentacoes`      | Registra uma entrada ou saída                                |
 
 ### Exemplos
@@ -260,6 +281,7 @@ Resposta `201 Created`:
   "estoqueMinimo": 3,
   "categoriaId": 1,
   "categoriaNome": "Eletrônicos",
+  "ativo": true,
   "criadoEm": "2026-10-24 14:00:00",
   "atualizadoEm": "2026-10-24 14:00:00"
 }
@@ -285,9 +307,9 @@ Os erros retornam `{ "erro": "mensagem" }` com o status HTTP correspondente:
 
 | Status | Quando                                                                 |
 | ------ | ---------------------------------------------------------------------- |
-| `400`  | Campo obrigatório ausente, valor inválido, JSON malformado ou estoque insuficiente |
+| `400`  | Campo obrigatório ausente, valor inválido, id inválido, JSON malformado ou produto inativo |
 | `404`  | Recurso ou rota não encontrados                                        |
-| `409`  | Violação de unicidade (SKU ou nome de categoria já existente)          |
+| `409`  | Violação de unicidade (SKU ou nome de categoria já existente) ou estoque insuficiente |
 | `500`  | Erro inesperado                                                        |
 
 ```json
@@ -318,15 +340,18 @@ Organização em `src/app/core/`:
 
 ## Regras de negócio
 
-- A **quantidade** de um produto só é informada na criação. Depois disso ela muda **apenas por movimentações**,
-  o que mantém o histórico consistente com o saldo.
+- A **quantidade** de um produto só é informada na criação, e gera uma `ENTRADA` "Estoque inicial".
+  Depois disso ela muda **apenas por movimentações**, o que mantém o histórico consistente com o saldo.
+- Cada movimentação guarda o saldo **anterior** e **posterior**. Movimentações são imutáveis: para corrigir
+  um lançamento, registre a movimentação inversa.
 - Cada movimentação roda em **transação**: o saldo é atualizado e a movimentação é registrada juntos,
   ou nenhum dos dois acontece.
-- **Saídas** maiores que o saldo disponível são recusadas com `400`.
+- **Saídas** maiores que o saldo disponível são recusadas com `409`.
 - Um produto está com **estoque baixo** quando `quantidade <= estoque_minimo`.
 - O **valor total** do inventário é `Σ quantidade × preço`.
 - Excluir uma **categoria** não exclui os produtos dela: eles ficam sem categoria.
-- Excluir um **produto** remove também as movimentações dele (`ON DELETE CASCADE`).
+- Excluir um **produto** com movimentações apenas o **inativa** (o histórico é preservado e ele some das
+  listagens e do dashboard); sem movimentações, ele é excluído de fato. Produtos inativos não podem ser movimentados.
 - SKU e nome de categoria são únicos, sem diferenciar maiúsculas de minúsculas.
 
 ## Módulo Spring Boot (em desenvolvimento)

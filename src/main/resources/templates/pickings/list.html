@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout(title=${type.pluralLabel}, content=~{::main})}">
+<body>
+<main class="o-main">
+    <div class="o-control-panel">
+        <div class="o-cp-left">
+            <a class="btn btn-primary btn-sm" th:href="@{/pickings/new(type=${type})}">Novo</a>
+            <span class="o-cp-title" th:text="${type.pluralLabel}"></span>
+        </div>
+        <div class="o-cp-center">
+            <div th:replace="~{fragments :: search('Buscar referência, parceiro ou origem...')}"></div>
+        </div>
+        <div class="o-cp-right">
+            <div th:replace="~{fragments :: pager(${page})}"></div>
+        </div>
+    </div>
+    <div class="o-with-panel">
+        <aside class="o-search-panel">
+            <h6><i class="bi bi-folder-fill"></i> Status</h6>
+            <ul>
+                <li><a th:href="@{/pickings(type=${type})}" th:classappend="${state == null and !all} ? 'active'">Em aberto</a></li>
+                <li th:each="s : ${states}"><a th:href="@{/pickings(type=${type}, state=${s})}"
+                                               th:classappend="${state == s} ? 'active'" th:text="${s.label}"></a></li>
+                <li><a th:href="@{/pickings(type=${type}, all=true)}" th:classappend="${all and state == null} ? 'active'">Todos</a></li>
+            </ul>
+        </aside>
+        <div class="o-content">
+            <table class="o-list" th:if="${page.hasContent()}">
+                <thead><tr><th>Referência</th><th>De</th><th>Para</th><th>Parceiro</th><th>Data programada</th><th>Origem</th><th>Status</th></tr></thead>
+                <tbody>
+                <tr th:each="p : ${page.content}" th:attr="data-href=@{/pickings/{id}(id=${p.id})}">
+                    <td class="fw-semibold" th:text="${p.reference}"></td>
+                    <td class="muted" th:text="${p.sourceLocation.fullName}"></td>
+                    <td class="muted" th:text="${p.destLocation.fullName}"></td>
+                    <td th:text="${p.partner?.name}"></td>
+                    <td th:classappend="${p.late} ? 'text-negative'" th:text="${@fmt.dateTime(p.scheduledDate)}"></td>
+                    <td class="muted" th:text="${p.origin}"></td>
+                    <td><span class="badge-state" th:classappend="|badge-${p.state}|" th:text="${p.state.label}"></span>
+                        <span class="badge-state badge-late" th:if="${p.late}">Atrasada</span></td>
+                </tr>
+                </tbody>
+            </table>
+            <div class="o-empty" th:unless="${page.hasContent()}">
+                <i class="bi bi-inboxes"></i>
+                <p>Nenhuma operação encontrada.</p>
+            </div>
+        </div>
+    </div>
+</main>
+</body>
+</html>

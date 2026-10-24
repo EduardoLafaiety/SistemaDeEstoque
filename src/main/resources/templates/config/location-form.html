@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout(title=${location.fullName}, content=~{::main})}">
+<body>
+<main class="o-main">
+    <div class="o-control-panel">
+        <div class="o-cp-left">
+            <span class="o-cp-title"><a class="bc" th:href="@{/config/locations}">Locais</a> / <span th:text="${location.fullName}"></span></span>
+        </div>
+        <div></div>
+        <div class="o-cp-right">
+            <button class="btn btn-primary btn-sm" type="submit" form="locationForm">Salvar</button>
+            <a class="btn btn-secondary btn-sm" th:href="@{/config/locations}">Descartar</a>
+        </div>
+    </div>
+    <div class="o-form-view">
+        <form id="locationForm" class="o-form-sheet" method="post" th:action="@{/config/locations/{id}(id=${location.id})}">
+            <div class="row g-3">
+                <div class="col-md-6"><label class="form-label" for="name">Nome</label>
+                    <input class="form-control" id="name" name="name" th:value="${location.name}" required></div>
+                <div class="col-md-6"><label class="form-label" for="parentId">Local pai</label>
+                    <select class="form-select" id="parentId" name="parentId">
+                        <option value="">— (raiz)</option>
+                        <option th:each="l : ${locations}" th:unless="${l.isChildOf(location)}" th:value="${l.id}" th:text="${l.fullName}"
+                                th:selected="${location.parent != null and location.parent.id == l.id}"></option>
+                    </select></div>
+                <div class="col-md-6"><label class="form-label" for="usage">Tipo</label>
+                    <select class="form-select" id="usage" name="usage">
+                        <option th:each="u : ${usages}" th:value="${u}" th:text="${u.label}" th:selected="${u == location.usage}"></option>
+                    </select></div>
+                <div class="col-md-6 d-flex align-items-end">
+                    <div class="form-check"><input class="form-check-input" type="checkbox" id="active" name="active" value="true" th:checked="${location.active}">
+                        <label class="form-check-label" for="active">Ativo</label></div>
+                </div>
+            </div>
+            <p class="text-muted small mt-3 mb-0">Alterar o nome ou o local pai atualiza o caminho de todos os sublocais.</p>
+        </form>
+    </div>
+</main>
+</body>
+</html>

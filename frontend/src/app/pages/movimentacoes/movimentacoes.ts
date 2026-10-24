@@ -21,7 +21,9 @@ export class MovimentacoesPage implements OnInit {
   /** Query param `?produtoId=` para pré-selecionar o produto (vindo da lista). */
   readonly produtoIdParam = input<string | undefined>(undefined, { alias: 'produtoId' });
 
-  protected readonly produtos = signal<Produto[]>([]);
+  /** Só os ativos podem ser movimentados; o filtro do histórico inclui os inativos. */
+  protected readonly todosProdutos = signal<Produto[]>([]);
+  protected readonly produtos = computed(() => this.todosProdutos().filter((p) => p.ativo));
   protected readonly movimentacoes = signal<Movimentacao[]>([]);
   protected readonly carregando = signal(true);
   protected readonly salvando = signal(false);
@@ -33,6 +35,8 @@ export class MovimentacoesPage implements OnInit {
 
   protected filtroProdutoId: number | null = null;
   protected filtroTipo: TipoMovimentacao | '' = '';
+  protected filtroInicio = '';
+  protected filtroFim = '';
 
   protected readonly form = this.fb.group({
     produtoId: this.fb.control<number | null>(null, Validators.required),
@@ -55,12 +59,18 @@ export class MovimentacoesPage implements OnInit {
   }
 
   private carregarProdutos() {
-    this.produtosApi.listar().subscribe((p) => this.produtos.set(p));
+    this.produtosApi.listar({ inativos: true }).subscribe((p) => this.todosProdutos.set(p));
   }
 
   protected carregarHistorico() {
     this.carregando.set(true);
-    this.movApi.listar({ produtoId: this.filtroProdutoId, tipo: this.filtroTipo }).subscribe({
+    const filtro = {
+      produtoId: this.filtroProdutoId,
+      tipo: this.filtroTipo,
+      inicio: this.filtroInicio,
+      fim: this.filtroFim,
+    };
+    this.movApi.listar(filtro).subscribe({
       next: (m) => {
         this.movimentacoes.set(m);
         this.carregando.set(false);

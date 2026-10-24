@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout(title='Histórico de movimentos', content=~{::main})}">
+<body>
+<main class="o-main">
+    <div class="o-control-panel">
+        <div class="o-cp-left"><span class="o-cp-title">Histórico de movimentos</span></div>
+        <form class="o-cp-center flex-wrap" method="get">
+            <div class="o-search">
+                <i class="bi bi-search"></i>
+                <input type="search" name="q" class="form-control form-control-sm" placeholder="Produto ou referência..." th:value="${q}">
+            </div>
+            <input type="date" name="from" class="form-control form-control-sm" style="width: 150px" th:value="${from}" aria-label="De">
+            <input type="date" name="to" class="form-control form-control-sm" style="width: 150px" th:value="${to}" aria-label="Até">
+            <button class="btn btn-secondary btn-sm" type="submit">Filtrar</button>
+        </form>
+        <div class="o-cp-right">
+            <div th:replace="~{fragments :: pager(${page})}"></div>
+        </div>
+    </div>
+    <div class="o-content">
+        <table class="o-list" th:if="${page.hasContent()}">
+            <thead><tr><th>Data</th><th>Referência</th><th>Produto</th><th>De</th><th>Para</th><th class="num">Quantidade</th></tr></thead>
+            <tbody>
+            <tr th:each="m : ${page.content}">
+                <td th:text="${@fmt.dateTime(m.date)}"></td>
+                <td th:text="${m.reference}"></td>
+                <td><a class="text-reset" th:href="@{/products/{id}(id=${m.product.id})}" th:text="${m.product.displayName}"></a></td>
+                <td class="muted" th:text="${m.sourceLocation.fullName}"></td>
+                <td class="muted" th:text="${m.destLocation.fullName}"></td>
+                <td class="num" th:text="${@fmt.qty(m.quantity)}"></td>
+            </tr>
+            </tbody>
+        </table>
+        <div class="o-empty" th:unless="${page.hasContent()}">
+            <i class="bi bi-clock-history"></i>
+            <p>Nenhum movimento no período.</p>
+        </div>
+    </div>
+</main>
+</body>
+</html>

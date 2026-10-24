@@ -32,8 +32,17 @@
     font-weight: 600;
   }
 
+  label {
+    position: relative;
+  }
+
+  /* Rádio escondido, mas preso ao rótulo (o `width: 100%` global estourava a página). */
   input {
     position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
     opacity: 0;
     pointer-events: none;
   }
@@ -59,11 +68,28 @@
   font-size: 0.85rem;
 }
 
-@media (max-width: 960px) {
+/* Abaixo disso o histórico (com a coluna Saldo) não cabe ao lado do formulário. */
+@media (max-width: 1240px) {
   .colunas {
     grid-template-columns: minmax(0, 1fr);
   }
   .registro {
     position: static;
   }
+}
+
+.periodo {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  color: var(--texto-suave);
+
+  input {
+    width: auto;
+  }
+}
+
+.saldo-mov {
+  white-space: nowrap;
 }

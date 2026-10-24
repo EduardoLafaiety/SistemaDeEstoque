@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout(title='Fornecedores e clientes', content=~{::main})}">
+<body>
+<main class="o-main">
+    <div class="o-control-panel">
+        <div class="o-cp-left">
+            <a class="btn btn-primary btn-sm" th:href="@{/partners/new}">Novo</a>
+            <span class="o-cp-title">Fornecedores e clientes</span>
+        </div>
+        <div class="o-cp-center">
+            <div th:replace="~{fragments :: search('Buscar nome, e-mail ou documento...')}"></div>
+        </div>
+        <div class="o-cp-right">
+            <div th:replace="~{fragments :: pager(${page})}"></div>
+        </div>
+    </div>
+    <div class="o-content">
+        <table class="o-list" th:if="${page.hasContent()}">
+            <thead><tr><th>Nome</th><th>CNPJ/CPF</th><th>E-mail</th><th>Telefone</th><th>Tipo</th><th></th></tr></thead>
+            <tbody>
+            <tr th:each="p : ${page.content}" th:attr="data-href=@{/partners/{id}(id=${p.id})}">
+                <td class="fw-semibold" th:text="${p.name}"></td>
+                <td th:text="${p.document}"></td>
+                <td th:text="${p.email}"></td>
+                <td th:text="${p.phone}"></td>
+                <td>
+                    <span class="badge-state badge-READY" th:if="${p.supplier}">Fornecedor</span>
+                    <span class="badge-state badge-DONE" th:if="${p.customer}">Cliente</span>
+                </td>
+                <td><span class="badge-state badge-DRAFT" th:unless="${p.active}">Arquivado</span></td>
+            </tr>
+            </tbody>
+        </table>
+        <div class="o-empty" th:unless="${page.hasContent()}">
+            <i class="bi bi-people"></i>
+            <p>Nenhum parceiro cadastrado.</p>
+        </div>
+    </div>
+</main>
+</body>
+</html>

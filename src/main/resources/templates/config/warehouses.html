@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout(title='Armazéns', content=~{::main})}">
+<body>
+<main class="o-main">
+    <div class="o-control-panel">
+        <div class="o-cp-left"><span class="o-cp-title">Armazéns</span></div>
+        <div></div><div></div>
+    </div>
+    <div class="o-form-view">
+        <div class="o-form-sheet">
+            <table class="o-list mb-4">
+                <thead><tr><th>Nome</th><th>Código</th><th>Local de estoque</th><th></th></tr></thead>
+                <tbody>
+                <tr th:each="w : ${warehouses}">
+                    <td>
+                        <form method="post" th:action="@{/config/warehouses/{id}(id=${w.id})}" class="d-flex gap-2">
+                            <input class="form-control form-control-sm" name="name" th:value="${w.name}" required aria-label="Nome">
+                            <button class="btn btn-secondary btn-sm" type="submit">Renomear</button>
+                        </form>
+                    </td>
+                    <td class="fw-semibold" th:text="${w.code}"></td>
+                    <td class="muted" th:text="${w.stockLocation.fullName}"></td>
+                    <td><a th:href="@{/inventory(location=${w.stockLocation.id})}">Inventário</a></td>
+                </tr>
+                </tbody>
+            </table>
+            <h6>Novo armazém</h6>
+            <form method="post" th:action="@{/config/warehouses}" class="row g-2 align-items-end">
+                <div class="col-md-6"><label class="form-label" for="wName">Nome</label>
+                    <input class="form-control" id="wName" name="name" required placeholder="ex.: Filial São Paulo"></div>
+                <div class="col-md-3"><label class="form-label" for="wCode">Código</label>
+                    <input class="form-control" id="wCode" name="code" required maxlength="10" placeholder="ex.: SP"></div>
+                <div class="col-md-3"><button class="btn btn-primary w-100" type="submit">Criar</button></div>
+            </form>
+            <p class="text-muted small mt-2 mb-0">Cada armazém recebe automaticamente os locais CÓDIGO e CÓDIGO/Estoque.</p>
+        </div>
+    </div>
+</main>
+</body>
+</html>

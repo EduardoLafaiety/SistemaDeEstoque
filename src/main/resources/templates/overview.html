@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout(title='Visão geral', content=~{::main})}">
+<body>
+<main class="o-main">
+    <div class="o-control-panel">
+        <div class="o-cp-left"><span class="o-cp-title">Visão geral do estoque</span></div>
+        <div></div>
+        <div></div>
+    </div>
+    <div class="o-dashboard">
+        <div class="row g-3 mb-3">
+            <div class="col-md-4" th:each="card : ${cards}">
+                <div class="o-card d-flex flex-column">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <h5><a class="text-reset" th:href="@{/pickings(type=${card.type})}" th:text="${card.type.pluralLabel}"></a></h5>
+                            <span class="subtitle">Armazém principal</span>
+                        </div>
+                        <i class="bi fs-4" style="color: var(--o-primary)"
+                           th:classappend="${card.type.name() == 'RECEIPT'} ? 'bi-box-arrow-in-down' : (${card.type.name() == 'DELIVERY'} ? 'bi-truck' : 'bi-arrow-left-right')"></i>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-end mt-auto">
+                        <a class="btn btn-primary btn-sm" th:href="@{/pickings(type=${card.type}, state='READY')}">
+                            <span th:text="${card.ready}"></span> a processar</a>
+                        <div class="text-end small">
+                            <div th:if="${card.late > 0}"><a class="text-danger" th:href="@{/pickings(type=${card.type}, state='READY')}">
+                                <span th:text="${card.late}"></span> atrasada(s)</a></div>
+                            <div><a th:href="@{/pickings(type=${card.type}, state='DRAFT')}"><span th:text="${card.draft}"></span> em rascunho</a></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-3 mb-3">
+            <div class="col-6 col-lg">
+                <a class="o-card d-block text-reset" th:href="@{/products}">
+                    <div class="o-kpi" th:text="${productCount}">0</div>
+                    <div class="o-kpi-label"><i class="bi bi-tags me-1"></i>Produtos</div>
+                </a>
+            </div>
+            <div class="col-6 col-lg">
+                <a class="o-card d-block text-reset" th:href="@{/reports/stock}">
+                    <div class="o-kpi" th:text="${@fmt.money(stockValue)}">R$ 0,00</div>
+                    <div class="o-kpi-label"><i class="bi bi-cash-stack me-1"></i>Valor em estoque</div>
+                </a>
+            </div>
+            <div class="col-6 col-lg">
+                <a class="o-card d-block text-reset" th:href="@{/replenishment(toOrder=true)}">
+                    <div class="o-kpi" th:classappend="${toReorder > 0} ? 'text-negative'" th:text="${toReorder}">0</div>
+                    <div class="o-kpi-label"><i class="bi bi-arrow-repeat me-1"></i>Produtos a repor</div>
+                </a>
+            </div>
+            <div class="col-6 col-lg">
+                <a class="o-card d-block text-reset" th:href="@{/purchases(state='DRAFT')}">
+                    <div class="o-kpi" th:text="${draftPurchases}">0</div>
+                    <div class="o-kpi-label"><i class="bi bi-cart me-1"></i>Cotações abertas</div>
+                </a>
+            </div>
+            <div class="col-6 col-lg">
+                <a class="o-card d-block text-reset" th:href="@{/production(state='CONFIRMED')}">
+                    <div class="o-kpi" th:text="${openProductions}">0</div>
+                    <div class="o-kpi-label"><i class="bi bi-gear-wide-connected me-1"></i>Produções confirmadas</div>
+                </a>
+            </div>
+        </div>
+
+        <div class="o-card">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h5>Últimos movimentos</h5>
+                <a th:href="@{/reports/moves}" class="small">Ver histórico</a>
+            </div>
+            <table class="o-list" th:if="${!recentMoves.isEmpty()}">
+                <thead><tr><th>Data</th><th>Referência</th><th>Produto</th><th>De</th><th>Para</th><th class="num">Quantidade</th></tr></thead>
+                <tbody>
+                <tr th:each="m : ${recentMoves}">
+                    <td th:text="${@fmt.dateTime(m.date)}"></td>
+                    <td th:text="${m.reference}"></td>
+                    <td th:text="${m.product.displayName}"></td>
+                    <td class="muted" th:text="${m.sourceLocation.fullName}"></td>
+                    <td class="muted" th:text="${m.destLocation.fullName}"></td>
+                    <td class="num" th:text="${@fmt.qty(m.quantity)}"></td>
+                </tr>
+                </tbody>
+            </table>
+            <p class="text-muted mb-0" th:if="${recentMoves.isEmpty()}">Nenhum movimento concluído ainda.</p>
+        </div>
+    </div>
+</main>
+</body>
+</html>

@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      th:fragment="layout(title, content)">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${title} + ' · Estoque'">Estoque</title>
+    <link rel="icon" th:href="@{/img/favicon.svg}" type="image/svg+xml">
+    <link rel="stylesheet" th:href="@{/webjars/bootstrap/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/webjars/bootstrap-icons/font/bootstrap-icons.min.css}">
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<nav class="o-navbar">
+    <a class="o-brand" th:href="@{/}"><span class="o-logo"><i class="bi bi-box-seam"></i></span>Estoque</a>
+    <ul class="o-menu">
+        <li><a th:href="@{/}" th:classappend="${currentPath == '/'} ? 'active'">Visão Geral</a></li>
+        <li class="dropdown">
+            <a class="dropdown-toggle" data-bs-toggle="dropdown" role="button" aria-expanded="false"
+               th:classappend="${#strings.startsWith(currentPath, '/pickings') or #strings.startsWith(currentPath, '/inventory') or #strings.startsWith(currentPath, '/replenishment') or #strings.startsWith(currentPath, '/purchases') or #strings.startsWith(currentPath, '/production')} ? 'active'">Operações</a>
+            <ul class="dropdown-menu">
+                <li><h6 class="dropdown-header">Transferências</h6></li>
+                <li><a class="dropdown-item" th:href="@{/pickings(type=RECEIPT)}">Recebimentos</a></li>
+                <li><a class="dropdown-item" th:href="@{/pickings(type=DELIVERY)}">Entregas</a></li>
+                <li><a class="dropdown-item" th:href="@{/pickings(type=INTERNAL)}">Transferências internas</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><h6 class="dropdown-header">Ajustes</h6></li>
+                <li><a class="dropdown-item" th:href="@{/inventory}">Inventário físico</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><h6 class="dropdown-header">Aquisição</h6></li>
+                <li><a class="dropdown-item" th:href="@{/replenishment}">Reposição</a></li>
+                <li><a class="dropdown-item" th:href="@{/purchases}">Compras</a></li>
+                <li><a class="dropdown-item" th:href="@{/production}">Ordens de produção</a></li>
+            </ul>
+        </li>
+        <li class="dropdown">
+            <a class="dropdown-toggle" data-bs-toggle="dropdown" role="button" aria-expanded="false"
+               th:classappend="${#strings.startsWith(currentPath, '/products') or #strings.startsWith(currentPath, '/partners')} ? 'active'">Produtos</a>
+            <ul class="dropdown-menu">
+                <li><a class="dropdown-item" th:href="@{/products}">Produtos</a></li>
+                <li><a class="dropdown-item" th:href="@{/partners}">Fornecedores e clientes</a></li>
+            </ul>
+        </li>
+        <li class="dropdown">
+            <a class="dropdown-toggle" data-bs-toggle="dropdown" role="button" aria-expanded="false"
+               th:classappend="${#strings.startsWith(currentPath, '/reports')} ? 'active'">Relatórios</a>
+            <ul class="dropdown-menu">
+                <li><a class="dropdown-item" th:href="@{/reports/stock}">Estoque</a></li>
+                <li><a class="dropdown-item" th:href="@{/reports/moves}">Histórico de movimentos</a></li>
+            </ul>
+        </li>
+        <li class="dropdown" sec:authorize="hasRole('ADMIN')">
+            <a class="dropdown-toggle" data-bs-toggle="dropdown" role="button" aria-expanded="false"
+               th:classappend="${#strings.startsWith(currentPath, '/config')} ? 'active'">Configuração</a>
+            <ul class="dropdown-menu">
+                <li><h6 class="dropdown-header">Gestão de armazéns</h6></li>
+                <li><a class="dropdown-item" th:href="@{/config/warehouses}">Armazéns</a></li>
+                <li><a class="dropdown-item" th:href="@{/config/locations}">Locais</a></li>
+                <li><a class="dropdown-item" th:href="@{/replenishment}">Regras de reposição</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><h6 class="dropdown-header">Produtos</h6></li>
+                <li><a class="dropdown-item" th:href="@{/config/categories}">Categorias</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><h6 class="dropdown-header">Sistema</h6></li>
+                <li><a class="dropdown-item" th:href="@{/config/users}">Usuários</a></li>
+                <li><a class="dropdown-item" th:href="@{/swagger-ui.html}" target="_blank">API (Swagger)</a></li>
+            </ul>
+        </li>
+    </ul>
+    <div class="dropdown ms-auto">
+        <a class="o-user" data-bs-toggle="dropdown" role="button" aria-expanded="false">
+            <span class="o-avatar" th:text="${#strings.substring(currentUserName, 0, 1)}">A</span>
+            <span class="d-none d-md-inline" th:text="${currentUserName}">Usuário</span>
+        </a>
+        <ul class="dropdown-menu dropdown-menu-end">
+            <li>
+                <form th:action="@{/logout}" method="post">
+                    <button class="dropdown-item" type="submit"><i class="bi bi-box-arrow-right me-2"></i>Sair</button>
+                </form>
+            </li>
+        </ul>
+    </div>
+</nav>
+
+<div class="o-flash">
+    <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="bi bi-check-circle me-1"></i><span th:text="${success}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+    </div>
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle me-1"></i><span th:text="${error}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+    </div>
+</div>
+
+<main th:replace="${content}"></main>
+
+<script th:src="@{/webjars/bootstrap/js/bootstrap.bundle.min.js}"></script>
+<script th:src="@{/js/app.js}"></script>
+</body>
+</html>

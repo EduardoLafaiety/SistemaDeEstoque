@@ -14,6 +14,8 @@ export interface Produto {
   estoqueMinimo: number;
   categoriaId: number | null;
   categoriaNome: string | null;
+  /** Produtos com movimentações não são apagados ao excluir: ficam inativos. */
+  ativo: boolean;
   criadoEm: string;
   atualizadoEm: string;
 }
@@ -37,6 +39,9 @@ export interface Movimentacao {
   quantidade: number;
   observacao: string | null;
   criadoEm: string;
+  /** Saldo antes/depois da movimentação (null em registros anteriores à migração). */
+  quantidadeAnterior: number | null;
+  quantidadePosterior: number | null;
   produtoId: number;
   produtoNome: string;
   produtoSku: string;

@@ -8,8 +8,9 @@
     "node": ">=22.13"
   },
   "scripts": {
-    "start": "node src/server.js",
-    "dev": "node --watch src/server.js"
+    "start": "node --no-warnings=ExperimentalWarning src/server.js",
+    "dev": "node --no-warnings=ExperimentalWarning --watch src/server.js",
+    "test": "node --no-warnings=ExperimentalWarning --test tests/*.test.js"
   },
   "keywords": [],
   "author": "",
