@@ -1,0 +1,35 @@
+.formulario {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px 20px;
+  max-width: 860px;
+}
+
+.largo {
+  grid-column: span 2;
+}
+
+.campo:has(textarea) {
+  grid-column: 1 / -1;
+}
+
+.dica {
+  font-size: 0.8rem;
+}
+
+.rodape {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding-top: 4px;
+}
+
+@media (max-width: 760px) {
+  .formulario {
+    grid-template-columns: 1fr;
+  }
+  .largo {
+    grid-column: auto;
+  }
+}

@@ -1,0 +1,39 @@
+.cabecalho div {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.kpis {
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  margin-bottom: 16px;
+}
+
+.kpi {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  strong {
+    font-size: 1.7rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  &.alerta strong {
+    color: var(--alerta);
+  }
+}
+
+.paineis {
+  grid-template-columns: repeat(auto-fit, minmax(min(340px, 100%), 1fr));
+  align-items: start;
+
+  .btn {
+    margin-top: 12px;
+  }
+}
+
+a:not(.btn) {
+  color: var(--primaria);
+  text-decoration: none;
+}

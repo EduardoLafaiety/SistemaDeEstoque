@@ -1,0 +1,55 @@
+<div class="cabecalho">
+  <h1>Categorias</h1>
+</div>
+
+<div class="card painel">
+  <form class="nova" (ngSubmit)="criar()">
+    <input name="novoNome" placeholder="Nome da nova categoria" [(ngModel)]="novoNome" />
+    <button class="btn primario" type="submit" [disabled]="!novoNome.trim()">+ Adicionar</button>
+  </form>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Nome</th>
+        <th class="num">Produtos</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (c of categorias(); track c.id) {
+        <tr>
+          @if (editandoId() === c.id) {
+            <td>
+              <input
+                name="nomeEdicao"
+                [(ngModel)]="nomeEdicao"
+                (keydown.enter)="salvarEdicao(c)"
+                (keydown.escape)="cancelarEdicao()"
+                aria-label="Novo nome"
+              />
+            </td>
+            <td class="num">{{ c.totalProdutos }}</td>
+            <td class="acoes">
+              <button class="btn pequeno primario" (click)="salvarEdicao(c)">Salvar</button>
+              <button class="btn pequeno" (click)="cancelarEdicao()">Cancelar</button>
+            </td>
+          } @else {
+            <td>{{ c.nome }}</td>
+            <td class="num">{{ c.totalProdutos }}</td>
+            <td class="acoes">
+              <button class="btn pequeno" (click)="iniciarEdicao(c)">Renomear</button>
+              <button class="btn pequeno perigo" (click)="excluir(c)">Excluir</button>
+            </td>
+          }
+        </tr>
+      } @empty {
+        <tr>
+          <td colspan="3" class="vazio">
+            {{ carregando() ? 'Carregando…' : 'Nenhuma categoria cadastrada.' }}
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>

@@ -1,0 +1,32 @@
+<div class="layout">
+  <aside class="sidebar">
+    <div class="marca">
+      <span class="marca-icone">▣</span>
+      <span>Estoque</span>
+    </div>
+    <nav>
+      @for (item of menu; track item.rota) {
+        <a
+          [routerLink]="item.rota"
+          routerLinkActive="ativo"
+          [routerLinkActiveOptions]="{ exact: item.exato }"
+        >
+          <span class="icone" aria-hidden="true">{{ item.icone }}</span>
+          {{ item.rotulo }}
+        </a>
+      }
+    </nav>
+  </aside>
+
+  <main class="conteudo">
+    <router-outlet />
+  </main>
+</div>
+
+<div class="toasts" aria-live="polite">
+  @for (t of toast.toasts(); track t.id) {
+    <div class="toast" [class.erro]="t.tipo === 'erro'" (click)="toast.fechar(t.id)">
+      {{ t.mensagem }}
+    </div>
+  }
+</div>
