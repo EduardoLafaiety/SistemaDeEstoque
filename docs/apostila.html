@@ -1,0 +1,1765 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Apostila do Sistema de Estoque</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+/* Layout: índice fixo à esquerda + coluna de leitura (~70ch). Capítulos rotulados como endereços de estoque (WH/Apostila/NN). */
+:root {
+  --bg: #f5f6f3;
+  --surface: #ffffff;
+  --fg: #1a2024;
+  --muted: #59656b;
+  --line: #dbe0dc;
+  --accent: #0b6466;
+  --accent-soft: #e1efed;
+  --label: #f1c232;
+  --label-fg: #1d1a0c;
+  --code-bg: #eef1ed;
+  --code-fg: #1f2a2e;
+  --warn: #a8481a;
+  --warn-soft: #f8e8dd;
+  --ok: #2c7636;
+  --ok-soft: #e3f1e4;
+  --tok-kw: #8a2b7a;
+  --tok-str: #2f6d2a;
+  --tok-com: #75807c;
+  --tok-type: #0b5c8f;
+  --tok-num: #a3501a;
+  --tok-meta: #8a6a00;
+  --font-display: "Archivo", "Segoe UI", system-ui, sans-serif;
+  --font-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "Cascadia Code", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #111517; --surface: #191e21; --fg: #e3e8e5; --muted: #9ba6a8; --line: #2a3235;
+    --accent: #5cc3bd; --accent-soft: #18302f; --label: #ddb22b; --label-fg: #1d1a0c;
+    --code-bg: #151a1c; --code-fg: #dde4e1; --warn: #f0a070; --warn-soft: #33231a; --ok: #7fcf88; --ok-soft: #1a2c1d;
+    --tok-kw: #e39ad6; --tok-str: #9fd38f; --tok-com: #7d8a86; --tok-type: #7cc0ef; --tok-num: #f0b07a; --tok-meta: #e3c766;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #111517; --surface: #191e21; --fg: #e3e8e5; --muted: #9ba6a8; --line: #2a3235;
+  --accent: #5cc3bd; --accent-soft: #18302f; --label: #ddb22b; --label-fg: #1d1a0c;
+  --code-bg: #151a1c; --code-fg: #dde4e1; --warn: #f0a070; --warn-soft: #33231a; --ok: #7fcf88; --ok-soft: #1a2c1d;
+  --tok-kw: #e39ad6; --tok-str: #9fd38f; --tok-com: #7d8a86; --tok-type: #7cc0ef; --tok-num: #f0b07a; --tok-meta: #e3c766;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: 16px; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+body {
+  background: var(--bg); color: var(--fg);
+  font-family: var(--font-body); font-size: 16.5px; line-height: 1.68;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 0;
+}
+a { color: var(--accent); text-underline-offset: 2px; }
+a:focus-visible, button:focus-visible, summary:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 3px; }
+
+.shell { display: grid; grid-template-columns: 290px minmax(0, 1fr); gap: 48px; max-width: 1240px; margin: 0 auto; }
+
+/* Índice */
+.toc { position: sticky; top: env(safe-area-inset-top, 0px); height: 100vh; overflow-y: auto; padding-block: 28px; font-size: 14px; scrollbar-width: thin; }
+.toc-brand { font-family: var(--font-display); font-weight: 800; font-size: 18px; letter-spacing: -0.01em; margin: 0 0 4px; }
+.toc-sub { color: var(--muted); font-size: 13px; margin: 0 0 18px; }
+.toc-progress { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; font-size: 12.5px; color: var(--muted); }
+.toc-progress .bar { flex: 1; height: 6px; background: var(--line); border-radius: 3px; overflow: hidden; }
+.toc-progress .bar span { display: block; height: 100%; width: 0; background: var(--accent); transition: width .3s; }
+.toc ol { list-style: none; margin: 0; padding: 0; }
+.toc .part { margin-top: 16px; font-family: var(--font-mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.toc li a { display: grid; grid-template-columns: 26px 1fr; gap: 4px; padding: 4px 8px; border-radius: 6px; color: var(--fg); text-decoration: none; line-height: 1.35; }
+.toc li a:hover { background: var(--accent-soft); }
+.toc li a.ativo { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+.toc li a .n { font-family: var(--font-mono); font-size: 12px; color: var(--muted); padding-top: 1px; }
+.toc li a.feito .n::after { content: " ✓"; color: var(--ok); }
+.toc-mobile { display: none; }
+
+/* Conteúdo */
+main { min-width: 0; padding-block: 40px 120px; }
+.capa { padding-block: 24px 40px; border-bottom: 1px solid var(--line); margin-bottom: 8px; }
+.capa .eyebrow { font-family: var(--font-mono); font-size: 12.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.capa h1 { font-family: var(--font-display); font-weight: 800; font-size: clamp(2.1rem, 5vw, 3.4rem); line-height: 1.04; letter-spacing: -0.025em; margin: 10px 0 16px; text-wrap: balance; max-width: 18ch; }
+.capa p { max-width: 64ch; color: var(--muted); font-size: 1.07rem; margin: 0 0 12px; }
+.capa .mapa { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(210px, 100%), 1fr)); gap: 10px; margin-top: 26px; }
+.capa .mapa div { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; font-size: 14px; line-height: 1.45; }
+.capa .mapa b { display: block; font-family: var(--font-display); font-size: 15px; margin-bottom: 2px; }
+
+.parte { margin-top: 72px; padding-top: 18px; border-top: 3px solid var(--fg); }
+.parte .eyebrow { font-family: var(--font-mono); font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.parte h2 { font-family: var(--font-display); font-weight: 800; font-size: clamp(1.7rem, 3.4vw, 2.3rem); letter-spacing: -0.02em; margin: 6px 0 8px; line-height: 1.1; }
+.parte > p { color: var(--muted); max-width: 66ch; margin: 0; }
+
+section.cap { margin-top: 56px; max-width: 74ch; }
+.cap-head { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; margin-bottom: 6px; }
+.etiqueta { display: inline-flex; align-items: stretch; background: var(--label); color: var(--label-fg); border-radius: 3px; font-family: var(--font-mono); font-weight: 600; font-size: 12px; letter-spacing: .04em; overflow: hidden; }
+.etiqueta span { padding: 3px 8px; }
+.etiqueta i { width: 34px; background: repeating-linear-gradient(90deg, var(--label-fg) 0 1px, transparent 1px 3px, var(--label-fg) 3px 5px, transparent 5px 6px, var(--label-fg) 6px 7px, transparent 7px 9px); opacity: .85; margin: 4px 6px 4px 0; }
+.nivel { font-family: var(--font-mono); font-size: 11.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.estudado { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); cursor: pointer; user-select: none; }
+.estudado input { accent-color: var(--accent); width: 16px; height: 16px; }
+h3 { font-family: var(--font-display); font-weight: 700; font-size: 1.6rem; line-height: 1.18; letter-spacing: -0.015em; margin: 4px 0 14px; text-wrap: balance; }
+h4 { font-family: var(--font-display); font-weight: 700; font-size: 1.12rem; margin: 30px 0 8px; letter-spacing: -0.005em; }
+p, ul, ol { margin: 0 0 14px; }
+li { margin-bottom: 5px; }
+strong { font-weight: 600; }
+code { font-family: var(--font-mono); font-size: .86em; background: var(--code-bg); color: var(--code-fg); padding: 1px 5px; border-radius: 4px; }
+pre { margin: 0 0 18px; background: var(--code-bg); border: 1px solid var(--line); border-radius: 8px; overflow-x: auto; font-size: 13.4px; line-height: 1.55; }
+pre code { display: block; padding: 14px 16px; background: none; font-size: inherit; color: var(--code-fg); border-radius: 0; }
+.arquivo { font-family: var(--font-mono); font-size: 12px; color: var(--muted); margin: 0 0 4px; }
+pre.mermaid { background: var(--surface); padding: 16px; text-align: center; }
+
+.tabela { overflow-x: auto; margin: 0 0 18px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: 14.5px; }
+th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-family: var(--font-mono); font-size: 11.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); font-weight: 500; background: var(--bg); }
+tr:last-child td { border-bottom: 0; }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; font-family: var(--font-mono); font-size: 13.5px; }
+
+.box { border-radius: 8px; padding: 14px 16px; margin: 0 0 18px; font-size: 15.5px; }
+.box > :last-child { margin-bottom: 0; }
+.box .rot { display: block; font-family: var(--font-mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; font-weight: 600; margin-bottom: 4px; }
+.box.porque { background: var(--accent-soft); } .box.porque .rot { color: var(--accent); }
+.box.cuidado { background: var(--warn-soft); } .box.cuidado .rot { color: var(--warn); }
+.box.lab { background: var(--ok-soft); } .box.lab .rot { color: var(--ok); }
+
+details.ex { border: 1px solid var(--line); border-radius: 8px; background: var(--surface); margin: 0 0 10px; }
+details.ex summary { cursor: pointer; padding: 10px 14px; font-weight: 500; list-style-position: inside; }
+details.ex summary::marker { color: var(--accent); }
+details.ex > div { padding: 0 16px 12px; border-top: 1px dashed var(--line); padding-top: 12px; font-size: 15.5px; }
+details.ex > div > :last-child { margin-bottom: 0; }
+.exs-titulo { font-family: var(--font-mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 30px 0 10px; }
+
+.contas { font-family: var(--font-mono); font-size: 13.5px; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 12px 16px; margin: 0 0 18px; overflow-x: auto; white-space: pre; line-height: 1.6; }
+
+.hljs-keyword, .hljs-built_in, .hljs-literal, .hljs-selector-tag { color: var(--tok-kw); }
+.hljs-string, .hljs-regexp, .hljs-addition { color: var(--tok-str); }
+.hljs-comment, .hljs-quote, .hljs-deletion { color: var(--tok-com); font-style: italic; }
+.hljs-type, .hljs-title, .hljs-title.class_, .hljs-name, .hljs-section { color: var(--tok-type); }
+.hljs-number, .hljs-symbol { color: var(--tok-num); }
+.hljs-meta, .hljs-attr, .hljs-attribute, .hljs-variable, .hljs-template-variable, .hljs-params { color: var(--tok-meta); }
+
+@media (max-width: 980px) {
+  .shell { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .toc { display: none; }
+  .toc-mobile { display: block; margin: 20px 0 0; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+  .toc-mobile summary { padding: 10px 14px; cursor: pointer; font-weight: 600; }
+  .toc-mobile ol { list-style: none; padding: 0 14px 12px; margin: 0; font-size: 14.5px; }
+  .toc-mobile .part { margin-top: 10px; font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+  .toc-mobile a { display: block; padding: 3px 0; text-decoration: none; }
+  main { padding-block: 16px 80px; }
+  body { font-size: 16px; }
+}
+</style>
+</head>
+<body>
+<div class="shell">
+<nav class="toc" aria-label="Índice">
+  <p class="toc-brand">Sistema de Estoque</p>
+  <p class="toc-sub">Apostila do básico ao avançado</p>
+  <div class="toc-progress"><div class="bar"><span id="barra"></span></div><span id="progresso">0 de 0</span></div>
+  <ol id="indice"></ol>
+</nav>
+
+<main>
+<header class="capa">
+  <div class="eyebrow">Java 25 · Spring Boot 4 · JPA · PostgreSQL · Thymeleaf</div>
+  <h1>Como funciona um sistema de estoque em Java</h1>
+  <p>Esta apostila usa o código real deste repositório como livro-texto. Ela começa pelo que é estoque (saldo, movimento, previsão) e termina em concorrência com travas de banco, reposição automática e implantação com Docker. Cada capítulo mostra o trecho de código, explica por que ele foi escrito daquele jeito e fecha com exercícios.</p>
+  <p>O repositório tem duas implementações do mesmo problema. O módulo <strong>Spring Boot</strong> (pasta <code>src/</code>) é o sistema completo, modelado no Odoo Inventory. A dupla <strong>Express + Angular</strong> (pastas <code>backend/</code> e <code>frontend/</code>) é uma versão enxuta. A apostila segue o Java e usa a versão Node como contraponto na Parte X.</p>
+  <details class="toc-mobile"><summary>Índice</summary><ol id="indice-mobile"></ol></details>
+  <div class="mapa">
+    <div><b>Partes I e II</b>Domínio de estoque e o Java moderno usado no projeto.</div>
+    <div><b>Partes III e IV</b>Spring, arquitetura em camadas, banco, JPA e consultas.</div>
+    <div><b>Partes V a VII</b>O núcleo: saldos, movimentos, travas, operações e reposição.</div>
+    <div><b>Partes VIII a XI</b>Web, API, segurança, testes, Docker e próximos passos.</div>
+  </div>
+</header>
+
+<!-- ============================== PARTE I ============================== -->
+<div class="parte" id="parte-1" data-parte="I · Domínio">
+  <div class="eyebrow">Parte I</div>
+  <h2>O que é um sistema de estoque</h2>
+  <p>Antes de qualquer linha de Java: os conceitos de negócio que o código implementa. Quem entende esta parte lê o resto do código sem esforço.</p>
+</div>
+
+<section class="cap" id="c01" data-titulo="Vocabulário do estoque">
+  <div class="cap-head"><span class="etiqueta"><span>WH/APOSTILA/01</span><i></i></span><span class="nivel">Básico</span></div>
+  <h3>Vocabulário do estoque</h3>
+  <p>Todo sistema de estoque responde a três perguntas: <strong>o que eu tenho</strong>, <strong>onde está</strong> e <strong>o que vai acontecer</strong>. Os termos abaixo aparecem no código com nomes em inglês, herdados do Odoo, e nas telas em português.</p>
+  <div class="tabela"><table>
+    <thead><tr><th>Conceito</th><th>No código</th><th>O que significa</th></tr></thead>
+    <tbody>
+      <tr><td>Produto / SKU</td><td><code>Product.sku</code></td><td>Item controlado. O SKU (<em>Stock Keeping Unit</em>) é o código único que identifica o item, como <code>E-COM06</code>.</td></tr>
+      <tr><td>Unidade de medida</td><td><code>Product.uom</code></td><td>Em que unidade a quantidade é contada (Un, Kg, Cx). Por isso as quantidades são decimais, e não inteiras.</td></tr>
+      <tr><td>Local</td><td><code>Location</code></td><td>Lugar físico ou lógico: armazém, prateleira, fornecedor, cliente, ajuste.</td></tr>
+      <tr><td>Saldo (em mãos)</td><td><code>StockQuant</code>, <code>onHand</code></td><td>Quantidade que existe agora em um local.</td></tr>
+      <tr><td>Movimento</td><td><code>StockMove</code></td><td>Transferência de uma quantidade de um local para outro.</td></tr>
+      <tr><td>Operação</td><td><code>Picking</code></td><td>Documento que agrupa movimentos: recebimento (IN), entrega (OUT) ou transferência interna (INT).</td></tr>
+      <tr><td>Previsão</td><td><code>forecast</code></td><td>Saldo futuro: o que tenho, mais o que vai entrar, menos o que vai sair.</td></tr>
+      <tr><td>Ponto de reposição</td><td><code>ReorderRule.minQty</code></td><td>Quando a previsão fica abaixo deste valor, é hora de comprar ou fabricar.</td></tr>
+      <tr><td>Estoque máximo</td><td><code>ReorderRule.maxQty</code></td><td>Até quanto repor quando o mínimo é atingido.</td></tr>
+      <tr><td>Lote múltiplo</td><td><code>multipleQty</code></td><td>O fornecedor só vende em caixas de N: a quantidade pedida é arredondada para cima.</td></tr>
+      <tr><td>Lead time</td><td><code>Product.leadTimeDays</code></td><td>Dias entre pedir e receber. Usado para calcular a data esperada.</td></tr>
+      <tr><td>Rota</td><td><code>ProductRoute</code></td><td>Como o produto é reposto: <code>BUY</code> (comprar) ou <code>MANUFACTURE</code> (fabricar).</td></tr>
+      <tr><td>Inventário / ajuste</td><td><code>StockService.adjust</code></td><td>Contagem física que corrige o saldo do sistema.</td></tr>
+      <tr><td>Custo e valor</td><td><code>Product.cost</code>, <code>StockQuant.getValue()</code></td><td>Valor do estoque é a quantidade vezes o custo unitário.</td></tr>
+    </tbody>
+  </table></div>
+  <h4>Saldo não é previsão</h4>
+  <p>A confusão mais comum de quem começa: achar que basta um número por produto. Considere uma loja com 10 cadeiras na prateleira e um pedido de cliente de 14 cadeiras já confirmado, mas ainda não entregue. O saldo é 10. A previsão é <code>10 − 14 = −4</code>. Se você olhar só o saldo, não compra nada; se olhar a previsão, sabe que faltam 4 e que precisa repor. Toda a tela de reposição deste projeto é construída sobre a previsão, não sobre o saldo.</p>
+  <h4>Estados de um documento</h4>
+  <p>Operações reais não acontecem num instante. Um recebimento é planejado (rascunho), confirmado (o caminhão foi agendado) e só então concluído (a mercadoria chegou e foi conferida). Cada estado muda o que o documento significa para o estoque:</p>
+  <ul>
+    <li><strong>Rascunho</strong>: ainda é intenção. Não conta em lugar nenhum.</li>
+    <li><strong>Confirmado / Pronto</strong>: é compromisso. Conta na <em>previsão</em>, mas não no saldo.</li>
+    <li><strong>Concluído</strong>: aconteceu. Já está no <em>saldo</em> e sai da previsão pendente.</li>
+    <li><strong>Cancelado</strong>: não conta em nada, mas fica no histórico.</li>
+  </ul>
+  <p>Essa separação aparece no enum <code>MoveState</code> e é a ideia mais importante da Parte V.</p>
+  <div class="exs-titulo">Exercícios</div>
+  <details class="ex"><summary>1. Um produto tem saldo 50, um recebimento confirmado de 30 e duas entregas confirmadas de 25 e 40. Qual a previsão?</summary><div><p><code>50 + 30 − 25 − 40 = 15</code>. O saldo continua 50 até alguma operação ser concluída.</p></div></details>
+  <details class="ex"><summary>2. Por que um recebimento em rascunho não entra na previsão?</summary><div><p>Porque rascunho é só intenção: pode ser alterado ou descartado a qualquer momento. Se contasse, um rascunho esquecido faria o sistema achar que vai chegar mercadoria e deixaria de sugerir compra. Na reposição o projeto trata cotações em rascunho à parte, como "em andamento" (Capítulo 24).</p></div></details>
+  <details class="ex"><summary>3. Um produto vendido por quilo deve ter quantidade <code>int</code>?</summary><div><p>Não. Quantidades fracionárias (2,350 kg) exigem decimal. O projeto usa <code>numeric(16,3)</code> no banco e <code>BigDecimal</code> no Java para todas as quantidades.</p></div></details>
+</section>
+
+<section class="cap" id="c02" data-titulo="Dois modelos de estoque">
+  <div class="cap-head"><span class="etiqueta"><span>WH/APOSTILA/02</span><i></i></span><span class="nivel">Básico</span></div>
+  <h3>Dois modelos: o contador e as partidas dobradas</h3>
+  <p>Existem duas formas clássicas de guardar estoque. O repositório tem uma de cada, e comparar as duas é a melhor forma de entender por que o módulo Java é desenhado do jeito que é.</p>
+  <h4>Modelo 1: o contador (versão Node)</h4>
+  <p>Cada produto tem uma coluna <code>quantidade</code>. Uma entrada soma, uma saída subtrai, e uma tabela de histórico guarda o que aconteceu:</p>
+  <pre><code class="language-sql">produtos(id, sku, nome, quantidade, estoque_minimo, ...)
+movimentacoes(id, produto_id, tipo ENTRADA|SAIDA, quantidade, quantidade_anterior, quantidade_posterior, ...)</code></pre>
+  <p>É simples e suficiente para uma loja pequena com um único depósito. Os limites aparecem quando o negócio cresce: não há "onde" (um só lugar), não há "previsão" (só entradas e saídas imediatas) e o histórico não explica de onde a mercadoria veio nem para onde foi.</p>
+  <h4>Modelo 2: partidas dobradas de locais (versão Java / Odoo)</h4>
+  <p>Aqui a mercadoria nunca aparece nem some: ela sempre <strong>se move de um local para outro</strong>. Até o mundo exterior vira local. O fornecedor é um local, o cliente é outro, e existem locais virtuais para ajuste de inventário e produção:</p>
+  <pre class="mermaid">flowchart LR
+  F["Parceiros/Fornecedores<br/>(virtual)"] -- "recebimento IN" --> E["WH/Estoque<br/>(interno)"]
+  E -- "entrega OUT" --> C["Parceiros/Clientes<br/>(virtual)"]
+  E -- "transferência INT" --> P["WH/Estoque/Prateleira A<br/>(interno)"]
+  A["Virtual/Ajuste de Inventário"] -- "ajuste +" --> E
+  E -- "ajuste −" --> A
+  PR["Virtual/Produção"] -- "ordem de produção" --> E</pre>
+  <p>É o mesmo princípio da contabilidade por partidas dobradas: todo débito tem um crédito. Uma compra não "adiciona 24 unidades"; ela <em>move</em> 24 unidades de <code>Fornecedores</code> para <code>WH/Estoque</code>. Consequências práticas:</p>
+  <ul>
+    <li><strong>Auditoria completa.</strong> Cada unidade em estoque tem uma trilha de movimentos que explica de onde veio.</li>
+    <li><strong>Uma única operação genérica.</strong> Recebimento, entrega, transferência, ajuste e produção usam a mesma função, <code>StockService.applyMove</code>. Só mudam a origem e o destino.</li>
+    <li><strong>Saldo só em locais internos.</strong> Locais virtuais não guardam saldo (ninguém conta o estoque do fornecedor). O código testa isso com <code>location.isInternal()</code>.</li>
+    <li><strong>Previsão natural.</strong> Movimentos confirmados e ainda não concluídos já dizem o que vai entrar e sair de cada local.</li>
+  </ul>
+  <div class="box porque"><span class="rot">Por que o projeto escolheu isso</span><p>O objetivo do módulo Java era imitar a tela de Reposição do Odoo, com árvore de locais, previsão e regras mín./máx. Essas funções dependem do modelo de movimentos. Com um contador por produto, não haveria como calcular a previsão por prateleira.</p></div>
+  <div class="exs-titulo">Exercícios</div>
+  <details class="ex"><summary>1. Modele, como movimento, a devolução de 2 unidades de um cliente.</summary><div><p>Um movimento de <code>Parceiros/Clientes</code> para <code>WH/Estoque</code> com quantidade 2. É um recebimento cuja origem é o cliente. Nenhum código novo é necessário, só outra origem.</p></div></details>
+  <details class="ex"><summary>2. Uma prateleira quebrou e 3 itens foram perdidos. Que movimento registra isso?</summary><div><p>De <code>WH/Estoque/Prateleira X</code> para um local virtual de perdas. O projeto usaria o de ajuste de inventário: na prática, um ajuste contando 3 unidades a menos gera exatamente esse movimento (Capítulo 14).</p></div></details>
+</section>
+
+<!-- ============================== PARTE II ============================== -->
+<div class="parte" id="parte-2" data-parte="II · Java">
+  <div class="eyebrow">Parte II</div>
+  <h2>O Java moderno que o projeto usa</h2>
+  <p>O projeto roda em Java 25. Esta parte cobre só os recursos da linguagem que aparecem no código, sempre com exemplos tirados dele.</p>
+</div>
+
+<section class="cap" id="c03" data-titulo="Classes, enums e records">
+  <div class="cap-head"><span class="etiqueta"><span>WH/APOSTILA/03</span><i></i></span><span class="nivel">Básico</span></div>
+  <h3>Classes, enums com dados e records</h3>
+  <h4>Classes com estado e comportamento</h4>
+  <p>As entidades são classes comuns com campos privados, getters e setters, e alguns métodos de comportamento. Repare que a regra "um local está dentro de outro" mora na própria classe <code>Location</code>, perto dos dados que ela usa:</p>
+  <p class="arquivo">src/main/java/com/estoque/domain/Location.java</p>
+  <pre><code class="language-java">public boolean isInternal() {
+    return usage == LocationUsage.INTERNAL;
+}
+
+/** Verdadeiro se este local é {@code other} ou está dentro dele. */
+public boolean isChildOf(Location other) {
+    return fullName.equals(other.fullName) || fullName.startsWith(other.fullName + "/");
+}</code></pre>
+  <p>O <code>+ "/"</code> no <code>startsWith</code> não é detalhe. Sem ele, <code>WH/Estoque2</code> seria considerado filho de <code>WH/Estoque</code>, porque a string começa igual.</p>
+  <h4>Enums que carregam dados</h4>
+  <p>Em Java, um enum é uma classe com um conjunto fixo de instâncias, e cada instância pode ter campos. O projeto usa isso para guardar o rótulo em português e o prefixo da referência junto com o valor:</p>
+  <p class="arquivo">domain/PickingType.java</p>
+  <pre><code class="language-java">public enum PickingType {
+    RECEIPT("Recebimento", "Recebimentos", "IN"),
+    DELIVERY("Entrega", "Entregas", "OUT"),
+    INTERNAL("Transferência interna", "Transferências internas", "INT");
+
+    private final String label;
+    private final String pluralLabel;
+    private final String prefix;
+
+    PickingType(String label, String pluralLabel, String prefix) { ... }
+    public String getPrefix() { return prefix; }
+}</code></pre>
+  <p>Assim, <code>PickingType.RECEIPT.getPrefix()</code> devolve <code>"IN"</code>, e a tela mostra <code>getLabel()</code> sem nenhum <code>if</code> espalhado pelo código. Todos os estados (<code>MoveState</code>, <code>PickingState</code>, <code>PurchaseState</code>, <code>ProductionState</code>) seguem esse padrão.</p>
+  <h4>Records: dados imutáveis em uma linha</h4>
+  <p>Um <code>record</code> declara uma classe imutável cujo propósito é carregar dados. O compilador gera construtor, acessores, <code>equals</code>, <code>hashCode</code> e <code>toString</code>. O projeto usa records para filtros e para o JSON da API:</p>
+  <p class="arquivo">service/ReplenishmentFilter.java</p>
+  <pre><code class="language-java">public record ReplenishmentFilter(Long locationId, ReorderTrigger trigger, String term,
+                                  boolean toOrderOnly, boolean snoozed) {
+}</code></pre>
+  <p>E o <em>construtor compacto</em> permite validar ou preencher valores padrão:</p>
+  <p class="arquivo">config/AppProperties.java</p>
+  <pre><code class="language-java">public record Admin(String username, String password) {
+    public Admin {
+        if (username == null || username.isBlank()) {
+            username = "admin";
+        }
+        if (password == null || password.isBlank()) {
+            password = "admin123";
+        }
+    }
+}</code></pre>
+  <div class="box cuidado"><span class="rot">Cuidado</span><p>Entidades JPA não podem ser records. O Hibernate precisa de um construtor sem argumentos e de campos que ele possa alterar ao carregar e ao detectar mudanças. Por isso o domínio usa classes e só os DTOs, filtros e configurações usam records.</p></div>
+  <div class="exs-titulo">Exercícios</div>
+  <details class="ex"><summary>1. Por que guardar o rótulo no enum em vez de num <code>switch</code> na tela?</summary><div><p>O rótulo fica num único lugar. Se aparecer um novo estado, o compilador obriga a informar o rótulo no construtor. Com <code>switch</code> espalhados, é fácil esquecer um e mostrar texto em branco.</p></div></details>
+  <details class="ex"><summary>2. <code>isChildOf</code> considera um local filho de si mesmo. Isso é intencional?</summary><div><p>Sim. "Estoque em WH/Estoque" deve incluir o próprio WH/Estoque e as prateleiras dentro dele. Todas as consultas por subárvore seguem a mesma regra: <code>fullName = :path or fullName like :path || '/%'</code>.</p></div></details>
+</section>
+
+<section class="cap" id="c04" data-titulo="BigDecimal e datas">
+  <div class="cap-head"><span class="etiqueta"><span>WH/APOSTILA/04</span><i></i></span><span class="nivel">Básico</span></div>
+  <h3>BigDecimal para quantidades e dinheiro; java.time para datas</h3>
+  <h4>Por que nunca <code>double</code></h4>
+  <p><code>double</code> é ponto flutuante binário e não representa a maioria das frações decimais com exatidão:</p>
+  <pre><code class="language-java">System.out.println(0.1 + 0.2);            // 0.30000000000000004
+System.out.println(1.10 * 3);             // 3.3000000000000003
+new BigDecimal("0.1").add(new BigDecimal("0.2"));   // 0.3, exato</code></pre>
+  <p>Em estoque, um erro na última casa vira uma comparação errada (<code>saldo &lt; quantidade</code>) e uma entrega recusada sem motivo. Por isso <strong>todo</strong> preço e <strong>toda</strong> quantidade no projeto são <code>BigDecimal</code>, mapeados para <code>numeric</code> no PostgreSQL.</p>
+  <h4>As quatro regras do BigDecimal</h4>
+  <ol>
+    <li><strong>Crie a partir de String</strong>: <code>new BigDecimal("10")</code>. <code>new BigDecimal(0.1)</code> herda o erro do <code>double</code>.</li>
+    <li><strong>É imutável</strong>: <code>a.add(b)</code> devolve um novo valor e não altera <code>a</code>. Esquecer de atribuir o resultado é um bug clássico.</li>
+    <li><strong>Compare com <code>compareTo</code></strong>, nunca com <code>equals</code>. <code>new BigDecimal("2.0").equals(new BigDecimal("2.00"))</code> é <code>false</code>, porque a escala é diferente. <code>compareTo</code> devolve 0.</li>
+    <li><strong>Divisão precisa de arredondamento</strong>: <code>1/3</code> não tem representação finita, então você informa escala e modo.</li>
+  </ol>
+  <p>Todas as regras aparecem juntas na função mais importante da reposição:</p>
+  <p class="arquivo">service/ReplenishmentService.java</p>
+  <pre><code class="language-java">if (!toMax &amp;&amp; forecast.compareTo(min) >= 0) {        // regra 3: compareTo
+    return BigDecimal.ZERO;
+}
+BigDecimal qty = max.max(min).subtract(forecast);     // regra 2: novo valor
+if (qty.signum() &lt;= 0) {                              // sinal: -1, 0 ou 1
+    return BigDecimal.ZERO;
+}
+if (multiple != null &amp;&amp; multiple.signum() > 0) {
+    qty = qty.divide(multiple, 0, RoundingMode.CEILING).multiply(multiple);   // regra 4
+}</code></pre>
+  <p><code>signum()</code> é a forma idiomática de perguntar "é positivo / zero / negativo?" sem criar um <code>BigDecimal.ZERO</code> para comparar. Nos testes, o AssertJ oferece <code>isEqualByComparingTo("24")</code>, que compara com <code>compareTo</code> pelo mesmo motivo.</p>
+  <h4>Datas com java.time</h4>
+  <p>O projeto usa <code>LocalDate</code> (só data: data esperada de um pedido) e <code>LocalDateTime</code> (data e hora: quando um movimento foi concluído). São imutáveis e têm aritmética legível:</p>
+  <pre><code class="language-java">created.setExpectedDate(LocalDate.now().plusDays(product.getLeadTimeDays()));
+picking.setScheduledDate(order.getExpectedDate().atTime(8, 0));   // data → data e hora
+return state == PickingState.READY &amp;&amp; scheduledDate.isBefore(LocalDateTime.now());  // atrasado?</code></pre>
+  <div class="box cuidado"><span class="rot">Cuidado: fuso horário</span><p><code>LocalDateTime</code> não tem fuso: é a hora do relógio do servidor. Se o servidor roda em UTC e o usuário está em Brasília, "agora" difere em 3 horas. Para sistemas multi-região, o padrão é gravar <code>Instant</code> ou <code>OffsetDateTime</code> e converter só na tela. A versão Node deste repositório tropeçou no mesmo problema: o filtro por data compara a data em UTC.</p></div>
+  <div class="exs-titulo">Exercícios</div>
+  <details class="ex"><summary>1. O que imprime <code>var a = new BigDecimal("5"); a.add(BigDecimal.ONE); System.out.println(a);</code>?</summary><div><p>Imprime <code>5</code>. O resultado de <code>add</code> foi descartado. O correto é <code>a = a.add(BigDecimal.ONE)</code>.</p></div></details>
+  <details class="ex"><summary>2. Calcule <code>quantityToOrder</code> para previsão 3, mín. 5, máx. 10, múltiplo 4.</summary><div><p>3 &lt; 5, então há pedido. <code>10 − 3 = 7</code>. <code>7 / 4 = 1,75</code>, que com <code>CEILING</code> vira 2. <code>2 × 4 = 8</code>. Esse caso está no teste <code>ReplenishmentCalculationTest</code>.</p></div></details>
+</section>
+
+<section class="cap" id="c05" data-titulo="Lambdas, streams e Optional">
+  <div class="cap-head"><span class="etiqueta"><span>WH/APOSTILA/05</span><i></i></span><span class="nivel">Intermediário</span></div>
+  <h3>Lambdas, streams, Optional, var, switch e text blocks</h3>
+  <h4>Streams: processar coleções declarando o que você quer</h4>
+  <p>Um stream é uma sequência de transformações sobre uma coleção. Somar o saldo disponível em vários locais:</p>
+  <pre><code class="language-java">BigDecimal total = available.stream()
+        .map(StockQuant::getQuantity)               // StockQuant → BigDecimal
+        .reduce(BigDecimal.ZERO, BigDecimal::add);  // soma, começando de zero</code></pre>
+  <p><code>StockQuant::getQuantity</code> é uma <em>referência de método</em>, forma curta de <code>q -> q.getQuantity()</code>. O <code>reduce</code> é como a soma é feita com <code>BigDecimal</code>, já que não existe <code>sum()</code> para ele.</p>
+  <p>Um exemplo mais rico: a tela de reposição filtra, transforma e ordena regras:</p>
+  <p class="arquivo">service/ReplenishmentService.java</p>
+  <pre><code class="language-java">List&lt;ReplenishmentLine> lines = byTrigger.stream()
+        .filter(l -> filter.trigger() == null || l.getRule().getTrigger() == filter.trigger())
+        .sorted(Comparator.comparing((ReplenishmentLine l) -> !l.isNeedsOrder())
+                .thenComparing(l -> l.getRule().getProduct().getName(), String.CASE_INSENSITIVE_ORDER))
+        .toList();</code></pre>
+  <p>A ordenação coloca primeiro quem precisa de pedido. <code>!isNeedsOrder()</code> é <code>false</code> para quem precisa, e <code>false</code> vem antes de <code>true</code>. O desempate é por nome, ignorando maiúsculas.</p>
+  <h4>Optional: "pode não existir"</h4>
+  <p>Repositórios devolvem <code>Optional&lt;T></code> em buscas que podem não encontrar nada. O projeto nunca chama <code>.get()</code> às cegas; ele transforma a ausência em erro de negócio ou em valor padrão:</p>
+  <pre><code class="language-java">return pickings.findById(id).orElseThrow(() -> BusinessException.notFound("Operação"));
+
+BigDecimal current = quants.findByProductIdAndLocationId(product.getId(), location.getId())
+        .map(StockQuant::getQuantity).orElse(BigDecimal.ZERO);
+
+return quants.findForUpdate(product.getId(), location.getId())
+        .orElseGet(() -> quants.save(new StockQuant(product, location)));   // cria se não existe</code></pre>
+  <p>Use <code>orElseGet</code> (recebe uma função) quando o valor alternativo é caro ou tem efeito colateral. <code>orElse(quants.save(...))</code> salvaria um registro <em>sempre</em>, mesmo quando o Optional tivesse valor.</p>
+  <h4>var, switch como expressão e text blocks</h4>
+  <pre><code class="language-java">var picking = get(id);                    // tipo inferido: Picking
+
+String sequence = switch (type) {         // switch que devolve valor; o compilador exige todos os casos
+    case RECEIPT -> "seq_picking_in";
+    case DELIVERY -> "seq_picking_out";
+    case INTERNAL -> "seq_picking_int";
+};
+
+@Query("""
+        select coalesce(sum(q.quantity), 0) from StockQuant q
+        where q.product.id = :productId
+        """)                              // text block: string de várias linhas</code></pre>
+  <p>O <code>switch</code> como expressão é mais seguro que o antigo: se alguém criar um quarto <code>PickingType</code>, o código deixa de compilar até a nova sequência ser tratada.</p>
+  <h4>Exceções unchecked para regras de negócio</h4>
+  <pre><code class="language-java">public class BusinessException extends RuntimeException {
+    public BusinessException(String message) { super(message); }
+    public static BusinessException notFound(String what) {
+        return new BusinessException(what + " não encontrado(a).");
+    }
+}</code></pre>
+  <p>Ser <code>RuntimeException</code> tem dois efeitos. O código não precisa declarar <code>throws</code> em todo lugar. E o Spring faz <em>rollback</em> automático da transação quando uma exceção unchecked escapa de um método <code>@Transactional</code>. Uma entrega sem estoque lança a exceção e nenhuma alteração parcial fica gravada.</p>
+  <div class="exs-titulo">Exercícios</div>
+  <details class="ex"><summary>1. Reescreva, com stream, "quantas regras estão adiadas".</summary><div><pre><code class="language-java">long adiadas = rules.stream().filter(ReorderRule::isSnoozed).count();</code></pre></div></details>
+  <details class="ex"><summary>2. Qual o problema de <code>.orElse(quants.save(new StockQuant(p, l)))</code>?</summary><div><p>O argumento de <code>orElse</code> é avaliado antes da chamada, então o <code>save</code> roda sempre e cria um saldo duplicado (que a restrição <code>unique (product_id, location_id)</code> do banco recusaria com erro). <code>orElseGet</code> só executa a função quando o Optional está vazio.</p></div></details>
+</section>
+
+<!-- ============================== PARTE III ============================== -->
+<div class="parte" id="parte-3" data-parte="III · Spring">
+  <div class="eyebrow">Parte III</div>
+  <h2>Spring Boot e a arquitetura do projeto</h2>
+  <p>Como o Spring monta a aplicação, como as camadas se dividem e o caminho que um clique percorre até o banco.</p>
+</div>
+
+<section class="cap" id="c06" data-titulo="Maven, pom.xml e o boot">
+  <div class="cap-head"><span class="etiqueta"><span>WH/APOSTILA/06</span><i></i></span><span class="nivel">Básico</span></div>
+  <h3>Maven, o pom.xml e o ponto de partida</h3>
+  <p>O <code>pom.xml</code> descreve o projeto para o Maven: nome, versão do Java e dependências. Dois detalhes evitam muito trabalho:</p>
+  <p class="arquivo">pom.xml</p>
+  <pre><code class="language-xml">&lt;parent>
+    &lt;groupId>org.springframework.boot&lt;/groupId>
+    &lt;artifactId>spring-boot-starter-parent&lt;/artifactId>
+    &lt;version>4.1.2&lt;/version>
+&lt;/parent>
+
+&lt;properties>
+    &lt;java.version>25&lt;/java.version>
+&lt;/properties>
+
+&lt;dependency>
+    &lt;groupId>org.springframework.boot&lt;/groupId>
+    &lt;artifactId>spring-boot-starter-data-jpa&lt;/artifactId>   &lt;!-- sem &lt;version>! -->
+&lt;/dependency></code></pre>
+  <ul>
+    <li>O <strong>parent</strong> traz uma lista de versões testadas juntas (o <em>BOM</em>). Por isso as dependências do Spring não declaram versão: Hibernate, Jackson, driver do PostgreSQL e Flyway vêm em versões compatíveis entre si.</li>
+    <li>Os <strong>starters</strong> são pacotes de dependências por assunto. <code>starter-data-jpa</code> traz Hibernate, Spring Data e o pool de conexões. <code>starter-security</code> traz o Spring Security. <code>starter-webmvc</code> traz o Tomcat embutido.</li>
+  </ul>
+  <div class="tabela"><table>
+    <thead><tr><th>Starter / dependência</th><th>Para que serve no projeto</th></tr></thead>
+    <tbody>
+      <tr><td><code>starter-webmvc</code> + <code>starter-thymeleaf</code></td><td>Servidor HTTP, controllers e as telas HTML</td></tr>
+      <tr><td><code>starter-validation</code></td><td>Anotações como <code>@NotNull</code> e <code>@DecimalMin</code> nos formulários</td></tr>
+      <tr><td><code>starter-data-jpa</code> + <code>postgresql</code></td><td>Mapeamento objeto-relacional e driver do banco</td></tr>
+      <tr><td><code>starter-flyway</code></td><td>Versionamento do esquema do banco (migrações)</td></tr>
+      <tr><td><code>starter-security</code></td><td>Login, perfis e proteção CSRF</td></tr>
+      <tr><td><code>starter-actuator</code></td><td><code>/actuator/health</code> para monitoramento</td></tr>
+      <tr><td><code>springdoc-openapi</code></td><td>Documentação Swagger da API em <code>/swagger-ui.html</code></td></tr>
+      <tr><td><code>webjars</code> (Bootstrap)</td><td>CSS e JS do front empacotados como dependência Maven</td></tr>
+      <tr><td><code>testcontainers</code></td><td>Sobe um PostgreSQL real em Docker durante os testes</td></tr>
+    </tbody>
+  </table></div>
+  <p>O projeto também traz o <strong>Maven Wrapper</strong> (<code>mvnw</code>, <code>mvnw.cmd</code>, pasta <code>.mvn/</code>). Ele baixa a versão certa do Maven na primeira execução, então ninguém precisa instalá-lo: <code>./mvnw spring-boot:run</code> funciona em qualquer máquina com Java.</p>
+  <h4>A classe principal</h4>
+  <p class="arquivo">SistemaEstoqueApplication.java</p>
+  <pre><code class="language-java">@SpringBootApplication
+@EnableScheduling
+@ConfigurationPropertiesScan
+public class SistemaEstoqueApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(SistemaEstoqueApplication.class, args);
+    }
+}</code></pre>
+  <ul>
+    <li><code>@SpringBootApplication</code> liga três coisas: configuração, <em>auto-configuração</em> e <em>component scan</em> (procura classes anotadas no pacote <code>com.estoque</code> e abaixo dele).</li>
+    <li><code>@EnableScheduling</code> ativa os métodos <code>@Scheduled</code>, usados pela reposição automática.</li>
+    <li><code>@ConfigurationPropertiesScan</code> encontra records como <code>AppProperties</code> e os preenche a partir do <code>application.yml</code>.</li>
+  </ul>
+  <p><strong>Auto-configuração</strong> é o que faz o Spring Boot parecer mágico. Ao ver o driver do PostgreSQL e a propriedade <code>spring.datasource.url</code>, ele cria sozinho o pool de conexões, o <code>EntityManager</code> e o gerenciador de transações. Você só escreve o que é específico do seu sistema.</p>
+</section>
+
+<section class="cap" id="c07" data-titulo="Injeção de dependências">
+  <div class="cap-head"><span class="etiqueta"><span>WH/APOSTILA/07</span><i></i></span><span class="nivel">Básico</span></div>
+  <h3>Inversão de controle e injeção de dependências</h3>
+  <p>No Spring, você não escreve <code>new StockService(...)</code>. Você declara que uma classe é um componente e do que ela precisa, e o <strong>container</strong> cria um objeto de cada (um <em>bean</em>) e os conecta. Isso é a <strong>inversão de controle</strong>: quem monta o grafo de objetos é o framework.</p>
+  <p class="arquivo">service/PickingService.java</p>
+  <pre><code class="language-java">@Service
+@Transactional
+public class PickingService {
+    private final PickingRepository pickings;
+    private final StockService stockService;
+    private final SequenceService sequences;
+    // ...
+
+    public PickingService(PickingRepository pickings, ProductRepository products, PartnerRepository partners,
+                          LocationService locationService, StockService stockService, SequenceService sequences) {
+        this.pickings = pickings;
+        // ...
+    }
+}</code></pre>
+  <p>Esse é o padrão <strong>injeção pelo construtor</strong>, usado em todas as classes do projeto. Ele é o recomendado porque:</p>
+  <ul>
+    <li>os campos podem ser <code>final</code>: a dependência nunca fica nula nem é trocada depois;</li>
+    <li>as dependências ficam explícitas. Um construtor com 10 parâmetros (como o de <code>ReplenishmentService</code>) é um sinal visível de que a classe talvez faça coisas demais;</li>
+    <li>dá para testar sem Spring, passando objetos falsos no construtor.</li>
+  </ul>
+  <p>As anotações de componente dizem o papel da classe:</p>
+  <div class="tabela"><table>
+    <thead><tr><th>Anotação</th><th>Papel</th><th>Exemplos</th></tr></thead>
+    <tbody>
+      <tr><td><code>@Service</code></td><td>Regras de negócio</td><td><code>StockService</code>, <code>PickingService</code></td></tr>
+      <tr><td>Interface de <code>JpaRepository</code></td><td>Acesso a dados; o Spring gera a implementação</td><td><code>StockQuantRepository</code></td></tr>
+      <tr><td><code>@Controller</code></td><td>Recebe HTTP e devolve uma tela</td><td><code>PickingController</code></td></tr>
+      <tr><td><code>@RestController</code></td><td>Recebe HTTP e devolve JSON</td><td><code>InventoryApiController</code></td></tr>
+      <tr><td><code>@Component</code></td><td>Componente genérico</td><td><code>DataInitializer</code>, <code>ReplenishmentScheduler</code></td></tr>
+      <tr><td><code>@Configuration</code> + <code>@Bean</code></td><td>Fábrica manual de beans</td><td><code>SecurityConfig</code></td></tr>
+    </tbody>
+  </table></div>
+  <div class="box porque"><span class="rot">Como o @Transactional funciona por baixo</span><p>O bean que o Spring injeta não é a sua classe: é um <em>proxy</em> que a envolve. Quando um controller chama <code>pickingService.validate(id)</code>, o proxy abre a transação, chama o método real e faz commit (ou rollback se sair uma exceção unchecked). Consequência importante: uma chamada de um método para outro <em>dentro da mesma classe</em> não passa pelo proxy. Um <code>@Transactional(readOnly = true)</code> num método chamado internamente é ignorado; vale a transação de quem chamou.</p></div>
+  <div class="exs-titulo">Exercícios</div>
+  <details class="ex"><summary>1. Por que <code>PurchaseService</code> recebe <code>PickingService</code> em vez de criar recebimentos ele mesmo?</summary><div><p>Reuso e responsabilidade única. Criar um recebimento envolve sequência, locais virtuais e movimentos. Essa lógica já existe em <code>PickingService.createReceipt</code>, que é visível só dentro do pacote (sem <code>public</code>) justamente para ser usada por serviços vizinhos.</p></div></details>
+  <details class="ex"><summary>2. O que aconteceria se <code>PickingService</code> e <code>PurchaseService</code> dependessem um do outro pelo construtor?</summary><div><p>Dependência circular: o Spring não consegue criar nenhum dos dois primeiro e a aplicação não sobe. O projeto evita isso porque a dependência só vai num sentido (compras → operações).</p></div></details>
+</section>
+
+<section class="cap" id="c08" data-titulo="Camadas e o caminho de um clique">
+  <div class="cap-head"><span class="etiqueta"><span>WH/APOSTILA/08</span><i></i></span><span class="nivel">Intermediário</span></div>
+  <h3>Arquitetura em camadas e o caminho de uma requisição</h3>
+  <p>O código Java está organizado por papel técnico:</p>
+  <pre><code class="language-plaintext">com.estoque
+├── domain/       entidades JPA e enums de estado (o modelo)
+├── repository/   interfaces Spring Data (acesso ao banco)
+├── service/      regras de negócio e transações
+│   └── form/     objetos que espelham formulários HTML
+├── web/          controllers das telas Thymeleaf
+├── api/          controller REST e DTOs JSON
+└── config/       segurança, propriedades, dados iniciais</code></pre>
+  <p>A regra de ouro: <strong>as dependências só apontam para baixo</strong>. A camada web conhece os serviços; os serviços conhecem os repositórios e o domínio; o domínio não conhece ninguém. Regra de negócio fica no serviço, nunca no controller. Por isso a mesma operação "pedir reposição" é usada pela tela (<code>ReplenishmentController</code>), pela API (<code>InventoryApiController</code>) e pelo agendador (<code>ReplenishmentScheduler</code>) sem duplicar uma linha.</p>
+  <h4>O que acontece ao clicar em "Validar" numa entrega</h4>
+  <pre class="mermaid">sequenceDiagram
+  autonumber
+  participant B as Navegador
+  participant S as Spring Security
+  participant C as PickingController
+  participant P as PickingService (proxy @Transactional)
+  participant K as StockService
+  participant DB as PostgreSQL
+  B->>S: POST /pickings/42/validate (cookie de sessão + token CSRF)
+  S->>S: usuário autenticado? token CSRF válido?
+  S->>C: validate(42)
+  C->>P: pickingService.validate(42)
+  P->>DB: BEGIN
+  P->>DB: select picking + movimentos
+  loop cada movimento
+    P->>K: applyMove(move)
+    K->>DB: select ... for update (trava os saldos)
+    K->>K: confere saldo, subtrai origem, soma destino
+  end
+  P->>DB: UPDATEs automáticos (dirty checking) + COMMIT
+  C-->>B: 302 redirect /pickings/42 + mensagem flash
+  B->>C: GET /pickings/42
+  C-->>B: HTML renderizado pelo Thymeleaf</pre>
+  <p>Repare nos passos 1 a 3: a segurança roda antes de qualquer código seu. E o padrão "POST devolve redirect, o navegador faz GET" é o <strong>Post/Redirect/Get</strong> (Capítulo 26): apertar F5 depois de validar não valida de novo.</p>
+  <div class="box cuidado"><span class="rot">Uma escolha discutível</span><p>Os controllers às vezes usam repositórios diretamente para listar dados (<code>products.findByActiveTrueOrderByName()</code> em <code>PickingController</code>). Para leituras simples isso é aceitável e evita serviços que só repassam chamadas. Para qualquer escrita, o projeto sempre passa pelo serviço. É um meio-termo pragmático, não uma arquitetura "pura".</p></div>
+</section>
+
+<section class="cap" id="c09" data-titulo="Configuração externa">
+  <div class="cap-head"><span class="etiqueta"><span>WH/APOSTILA/09</span><i></i></span><span class="nivel">Intermediário</span></div>
+  <h3>Configuração: application.yml, variáveis de ambiente e .env</h3>
+  <p>Nada que muda entre ambientes fica no código. O <code>application.yml</code> declara cada valor com um padrão e permite sobrescrever por variável de ambiente com a sintaxe <code>${VARIAVEL:padrão}</code>:</p>
+  <p class="arquivo">src/main/resources/application.yml (trechos)</p>
+  <pre><code class="language-yaml">spring:
+  config:
+    import: optional:file:.env[.properties]   # lê um .env local, se existir
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/estoque}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgres}
+  jpa:
+    open-in-view: true
+    hibernate:
+      ddl-auto: validate          # Hibernate confere o esquema, mas não o altera
+  threads:
+    virtual:
+      enabled: true               # cada requisição em uma virtual thread
+
+app:
+  admin:
+    username: ${ADMIN_USERNAME:admin}
+    password: ${ADMIN_PASSWORD:admin123}
+  demo-data: ${DEMO_DATA:true}
+  replenishment:
+    cron: "0 */15 * * * *"        # a cada 15 minutos</code></pre>
+  <p>O bloco <code>app:</code> é do próprio projeto. Ele vira um objeto tipado pelo <code>@ConfigurationProperties</code>:</p>
+  <pre><code class="language-java">@ConfigurationProperties(prefix = "app")
+public record AppProperties(Admin admin, boolean demoData) { ... }</code></pre>
+  <p>Assim, nenhuma classe lê strings soltas de configuração: injeta <code>AppProperties</code> e usa <code>properties.demoData()</code>. Erros de digitação viram erros de compilação.</p>
+  <h4>Ordem de precedência</h4>
+  <p>Variáveis de ambiente vencem o <code>.env</code>, que vence os padrões do yml. Em desenvolvimento você usa o <code>.env</code> (copiado de <code>.env.example</code> e ignorado pelo git); em produção, o Docker Compose injeta variáveis de ambiente. A mesma imagem roda em qualquer ambiente.</p>
+  <div class="box cuidado"><span class="rot">Segredos</span><p>A senha padrão <code>admin123</code> existe para a demonstração subir sem configuração. O <code>DataInitializer</code> registra um aviso no log ("Altere a senha após o primeiro acesso"). Em produção, sempre defina <code>ADMIN_PASSWORD</code> e <code>DB_PASSWORD</code>.</p></div>
+  <h4>Inicialização: ApplicationRunner</h4>
+  <p class="arquivo">config/DataInitializer.java</p>
+  <pre><code class="language-java">@Component
+public class DataInitializer implements ApplicationRunner {
+    @Override
+    public void run(ApplicationArguments args) {
+        var admin = properties.admin();
+        if (userService.createInitialAdmin(admin.username(), admin.password())) {
+            log.warn("Usuário administrador '{}' criado. Altere a senha após o primeiro acesso.", admin.username());
+        }
+        if (properties.demoData() &amp;&amp; demoData.loadIfEmpty()) {
+            log.info("Dados de demonstração carregados.");
+        }
+    }
+}</code></pre>
+  <p>O <code>ApplicationRunner</code> roda uma vez, depois que todos os beans estão prontos. As duas operações são <strong>idempotentes</strong>: só agem se o banco está vazio. Reiniciar a aplicação não duplica o admin nem os produtos de exemplo.</p>
+</section>
+
+<!-- ============================== PARTE IV ============================== -->
+<div class="parte" id="parte-4" data-parte="IV · Persistência">
+  <div class="eyebrow">Parte IV</div>
+  <h2>Banco de dados, JPA e consultas</h2>
+  <p>Do esquema SQL ao objeto Java: como os dados são guardados, versionados, mapeados e consultados.</p>
+</div>
+
+<section class="cap" id="c10" data-titulo="O esquema relacional">
+  <div class="cap-head"><span class="etiqueta"><span>WH/APOSTILA/10</span><i></i></span><span class="nivel">Intermediário</span></div>
+  <h3>O esquema relacional e as migrações com Flyway</h3>
+  <pre class="mermaid">erDiagram
+  CATEGORY ||--o{ PRODUCT : "classifica"
+  PARTNER ||--o{ PRODUCT : "fornece (padrão)"
+  PRODUCT ||--o{ STOCK_QUANT : "saldo por local"
+  LOCATION ||--o{ STOCK_QUANT : "guarda"
+  LOCATION ||--o{ LOCATION : "contém (parent)"
+  WAREHOUSE }o--|| LOCATION : "view e stock"
+  PICKING ||--o{ STOCK_MOVE : "agrupa"
+  MANUFACTURING_ORDER ||--o{ STOCK_MOVE : "gera"
+  PRODUCT ||--o{ STOCK_MOVE : "move"
+  LOCATION ||--o{ STOCK_MOVE : "origem / destino"
+  PURCHASE_ORDER ||--o{ PURCHASE_ORDER_LINE : "contém"
+  PURCHASE_ORDER ||--o{ PICKING : "gera recebimento"
+  PARTNER ||--o{ PURCHASE_ORDER : "fornecedor"
+  PRODUCT ||--o{ REORDER_RULE : "regra mín./máx."
+  LOCATION ||--o{ REORDER_RULE : "por local"</pre>
+  <p>Algumas decisões do <code>V1__schema.sql</code> que valem estudo:</p>
+  <pre><code class="language-sql">create table stock_quant (
+    id          bigserial primary key,
+    product_id  bigint not null references product (id),
+    location_id bigint not null references location (id),
+    quantity    numeric(16, 3) not null default 0,
+    unique (product_id, location_id)          -- no máximo um saldo por produto e local
+);
+
+create index idx_stock_move_product_state on stock_move (product_id, state);  -- acelera a previsão
+create sequence seq_picking_in;               -- gera IN/00001, IN/00002...</code></pre>
+  <ul>
+    <li><code>numeric(16,3)</code> para quantidades (até 3 casas: gramas, mililitros) e <code>numeric(14,2)</code> para dinheiro. É o par do <code>BigDecimal</code> no Java.</li>
+    <li><code>unique (product_id, location_id)</code> garante no banco que não existam dois saldos para o mesmo par. Mesmo que um bug no Java tente, o banco recusa.</li>
+    <li><code>references</code> (chaves estrangeiras) impedem movimento apontando para produto inexistente.</li>
+    <li>O índice composto <code>(product_id, state)</code> casa com as consultas mais frequentes: "movimentos CONFIRMED do produto X".</li>
+    <li><code>on delete cascade</code> em <code>stock_move.picking_id</code>: apagar uma operação em rascunho apaga seus movimentos.</li>
+  </ul>
+  <p>A migração também <strong>insere os locais básicos</strong>: Parceiros/Fornecedores, Parceiros/Clientes, Virtual/Ajuste de Inventário, Virtual/Produção, WH e WH/Estoque, além do armazém padrão. Esses registros fazem parte do esquema, porque o código depende deles (<code>locationService.virtual(LocationUsage.SUPPLIER)</code>).</p>
+  <h4>Flyway: o banco tem versão, como o código</h4>
+  <p>Cada arquivo em <code>db/migration</code> chamado <code>V&lt;n>__descricao.sql</code> é uma versão. Ao subir, o Flyway confere a tabela <code>flyway_schema_history</code> e executa, em ordem, só as migrações que ainda não rodaram naquele banco.</p>
+  <ul>
+    <li><strong>Nunca edite uma migração já aplicada.</strong> O Flyway guarda o checksum e recusa iniciar se o arquivo mudou. Para alterar o esquema, crie <code>V2__adiciona_lote.sql</code>.</li>
+    <li>Com <code>ddl-auto: validate</code>, o Hibernate só confere se as entidades batem com as tabelas. Quem altera o esquema é o Flyway, que é revisável e repetível. O <code>ddl-auto: update</code>, comum em tutoriais, é perigoso em produção: ele adivinha alterações e nunca remove nada.</li>
+  </ul>
+  <div class="exs-titulo">Exercícios</div>
+  <details class="ex"><summary>1. Escreva a migração que adiciona número de lote aos movimentos.</summary><div><pre><code class="language-sql">-- V2__lote_no_movimento.sql
+alter table stock_move add column lot_number varchar(40);
+create index idx_stock_move_lot on stock_move (lot_number);</code></pre><p>E o campo correspondente na entidade, senão o <code>validate</code> não reclama (coluna a mais é tolerada), mas o dado nunca é lido.</p></div></details>
+  <details class="ex"><summary>2. Por que as referências IN/00001 vêm de <code>sequence</code> e não de <code>max(id) + 1</code>?</summary><div><p>Duas transações simultâneas leriam o mesmo <code>max</code> e gerariam a mesma referência. <code>nextval</code> é atômico: cada chamada recebe um número diferente, mesmo em paralelo. O custo é que números de transações desfeitas são pulados (podem existir buracos), o que é aceitável.</p></div></details>
+</section>
+
+<section class="cap" id="c11" data-titulo="Mapeamento JPA">
+  <div class="cap-head"><span class="etiqueta"><span>WH/APOSTILA/11</span><i></i></span><span class="nivel">Intermediário</span></div>
+  <h3>JPA e Hibernate: mapeando tabelas em objetos</h3>
+  <p class="arquivo">domain/StockMove.java (anotações)</p>
+  <pre><code class="language-java">@Entity
+public class StockMove {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)   // usa o bigserial do PostgreSQL
+    private Long id;
+
+    @ManyToOne(fetch = FetchType.LAZY)                    // só carrega a operação se alguém pedir
+    private Picking picking;
+
+    @ManyToOne(optional = false)                          // obrigatório (not null)
+    private Product product;
+
+    @Column(nullable = false, precision = 16, scale = 3)
+    private BigDecimal quantity;
+
+    @Enumerated(EnumType.STRING)                          // grava "CONFIRMED", não 1
+    @Column(nullable = false, length = 20)
+    private MoveState state = MoveState.DRAFT;
+
+    @Column(name = "move_date", nullable = false)         // "date" é palavra reservada em SQL
+    private LocalDateTime date = LocalDateTime.now();
+}</code></pre>
+  <h4>Relacionamentos</h4>
+  <ul>
+    <li><code>@ManyToOne</code>: vários movimentos para um produto. Vira a coluna <code>product_id</code> (o nome é derivado do campo).</li>
+    <li><code>@OneToMany(mappedBy = "picking")</code> em <code>Picking.moves</code>: o lado inverso. O <code>mappedBy</code> diz que a chave estrangeira está no outro lado (<code>stock_move.picking_id</code>), então só existe uma coluna.</li>
+    <li><code>cascade = CascadeType.ALL</code>: salvar ou apagar a operação faz o mesmo com os movimentos.</li>
+    <li><code>orphanRemoval = true</code>: tirar um movimento da lista apaga o registro. É o que permite ao <code>PickingService.save</code> fazer <code>picking.getMoves().clear()</code> e recriar as linhas do formulário.</li>
+  </ul>
+  <p>Num relacionamento bidirecional, os dois lados precisam ficar coerentes em memória. Por isso existe o método auxiliar:</p>
+  <pre><code class="language-java">public void addMove(StockMove move) {
+    move.setPicking(this);   // lado dono: é este que vira a coluna picking_id
+    moves.add(move);         // lado inverso: a lista em memória
+}</code></pre>
+  <h4>EnumType.STRING versus ORDINAL</h4>
+  <p><code>ORDINAL</code> (o padrão!) grava a posição do enum: DRAFT=0, CONFIRMED=1. Se alguém inserir um novo estado no meio da lista, todos os registros antigos mudam de significado em silêncio. <code>STRING</code> grava o nome e sobrevive a reordenações. Use sempre <code>STRING</code>.</p>
+  <h4>LAZY versus EAGER</h4>
+  <p><code>@ManyToOne</code> é EAGER por padrão: carregar um movimento carregaria também produto, locais e operação. O projeto marca como <code>LAZY</code> os relacionamentos que nem sempre são usados (<code>picking</code>, <code>category</code>, <code>supplier</code>). O Hibernate então coloca um <em>proxy</em> no lugar e só busca no banco quando você chama um getter. Isso economiza consultas, mas exige uma sessão aberta no momento do acesso (veja <code>open-in-view</code> no Capítulo 13).</p>
+</section>
+
+<section class="cap" id="c12" data-titulo="Dirty checking e transações">
+  <div class="cap-head"><span class="etiqueta"><span>WH/APOSTILA/12</span><i></i></span><span class="nivel">Intermediário</span></div>
+  <h3>Contexto de persistência e dirty checking</h3>
+  <p>Leia este método com atenção e procure a chamada que grava no banco:</p>
+  <p class="arquivo">service/PickingService.java</p>
+  <pre><code class="language-java">public void confirm(Long id) {
+    var picking = get(id);
+    requireState(picking, PickingState.DRAFT);
+    picking.setState(PickingState.READY);
+    picking.getMoves().forEach(m -> m.setState(MoveState.CONFIRMED));
+}</code></pre>
+  <p>Não existe <code>save</code>. Mesmo assim, o estado é gravado. Isso é o <strong>dirty checking</strong>:</p>
+  <ol>
+    <li>Dentro de uma transação, o Hibernate mantém um <em>contexto de persistência</em>: um mapa de todas as entidades carregadas, com uma cópia do estado original de cada uma.</li>
+    <li>Entidades nesse mapa estão <em>gerenciadas</em>. Mudar um campo delas é só mudar um objeto em memória.</li>
+    <li>No commit, o Hibernate compara cada entidade com a cópia original e gera um <code>UPDATE</code> para cada diferença.</li>
+  </ol>
+  <p>Por isso o código dos serviços parece "só mexer em objetos": <code>quant.setQuantity(...)</code> em <code>applyMove</code> vira um <code>UPDATE stock_quant</code> no fim da transação. O <code>save</code> só é necessário para <strong>entidades novas</strong>, como <code>quants.save(new StockQuant(...))</code>.</p>
+  <div class="box cuidado"><span class="rot">Armadilha</span><p>Fora de uma transação não há dirty checking. Se um método sem <code>@Transactional</code> carregar uma entidade e alterá-la, nada é gravado e nenhum erro aparece. No projeto, todos os serviços têm <code>@Transactional</code> na classe, o que cobre todos os métodos públicos.</p></div>
+  <h4>readOnly = true</h4>
+  <p>Métodos de consulta usam <code>@Transactional(readOnly = true)</code>. Isso avisa o Hibernate para não guardar cópias para o dirty checking (economiza memória) e o driver pode otimizar a conexão. Também documenta a intenção: quem lê o método sabe que ele não altera nada.</p>
+  <h4>Rollback</h4>
+  <p>Se <code>applyMove</code> lançar <code>BusinessException</code> no terceiro movimento de uma entrega, os dois primeiros já alteraram saldos em memória. A exceção escapa do proxy, a transação faz rollback e nenhuma das alterações chega ao banco. Uma entrega é concluída inteira ou não é concluída. Isso é a <strong>atomicidade</strong> (o "A" de ACID).</p>
+  <div class="exs-titulo">Exercícios</div>
+  <details class="ex"><summary>1. <code>PickingService.validate</code> não chama <code>save</code> para a ordem de compra ao marcá-la como DONE. Por quê funciona?</summary><div><p><code>picking.getPurchaseOrder()</code> devolve uma entidade gerenciada (carregada na mesma transação). <code>order.setState(PurchaseState.DONE)</code> é detectado pelo dirty checking no commit.</p></div></details>
+  <details class="ex"><summary>2. Por que <code>lockQuant</code> precisa de <code>quants.save(new StockQuant(...))</code>?</summary><div><p>Um objeto criado com <code>new</code> não está no contexto de persistência; o Hibernate não sabe que ele existe. O <code>save</code> (<code>persist</code>) o torna gerenciado, e a partir daí as alterações seguintes são detectadas.</p></div></details>
+</section>
+
+<section class="cap" id="c13" data-titulo="Spring Data e consultas">
+  <div class="cap-head"><span class="etiqueta"><span>WH/APOSTILA/13</span><i></i></span><span class="nivel">Intermediário</span></div>
+  <h3>Spring Data: repositórios, JPQL e paginação</h3>
+  <p>Um repositório é só uma interface. O Spring gera a implementação em tempo de execução:</p>
+  <pre><code class="language-java">public interface StockQuantRepository extends JpaRepository&lt;StockQuant, Long> {
+    Optional&lt;StockQuant> findByProductIdAndLocationId(Long productId, Long locationId);
+}</code></pre>
+  <p><code>JpaRepository</code> já traz <code>save</code>, <code>findById</code>, <code>findAll</code>, <code>delete</code> e <code>count</code>. Métodos com nome padronizado viram consultas automaticamente: <code>findByProductIdAndLocationId</code> navega <code>product.id</code> e <code>location.id</code>. Outros do projeto: <code>existsBySkuIgnoreCase</code>, <code>findByActiveTrueOrderByName</code>, <code>findTop10ByStateOrderByDateDesc</code>, <code>countByState</code>.</p>
+  <h4>@Query com JPQL</h4>
+  <p>Para consultas que o nome não expressa, o projeto escreve JPQL, linguagem parecida com SQL mas que fala de <em>entidades e campos</em>, não de tabelas e colunas:</p>
+  <pre><code class="language-java">@Query("""
+        select coalesce(sum(q.quantity), 0) from StockQuant q
+        where q.product.id = :productId
+          and (q.location.fullName = :path or q.location.fullName like concat(:path, '/%'))
+        """)
+BigDecimal sumInSubtree(@Param("productId") Long productId, @Param("path") String path);</code></pre>
+  <ul>
+    <li><code>q.location.fullName</code> navega o relacionamento; o Hibernate gera o <code>JOIN</code>.</li>
+    <li><code>coalesce(sum(...), 0)</code>: <code>sum</code> de zero linhas é <code>NULL</code> em SQL, não zero. Sem o <code>coalesce</code>, o Java receberia <code>null</code> e explodiria no primeiro <code>.add</code>.</li>
+    <li><code>:productId</code> é parâmetro nomeado. O valor vai separado do SQL, o que elimina <strong>SQL injection</strong>. Nunca concatene entrada do usuário em consultas.</li>
+    <li>O enum aparece pelo nome completo: <code>q.location.usage = com.estoque.domain.LocationUsage.INTERNAL</code>.</li>
+  </ul>
+  <h4>Paginação</h4>
+  <pre><code class="language-java">@Query(value = "select q from StockQuant q join fetch q.product p join fetch q.location l where ...",
+       countQuery = "select count(q) from StockQuant q join q.product p join q.location l where ...")
+Page&lt;StockQuant> searchInternal(@Param("path") String path, @Param("term") String term, Pageable pageable);
+
+// no controller da API:
+quants.searchInternal(path, q.trim(), PageRequest.of(page, Math.clamp(size, 1, 200), Sort.by("product.name")))</code></pre>
+  <p><code>Page</code> traz o conteúdo da página e o total de registros. A <code>countQuery</code> separada existe porque <code>join fetch</code> não pode ser usado em <code>count</code>. E o <code>Math.clamp(size, 1, 200)</code> impede que alguém peça um milhão de linhas pela API.</p>
+  <h4>O problema N+1 e o join fetch</h4>
+  <p>Listar 80 saldos e mostrar o nome do produto de cada um, com <code>product</code> LAZY, gera 1 consulta para os saldos e mais 80 para os produtos. Isso é o <strong>N+1</strong>, o problema de desempenho mais comum com JPA. O <code>join fetch</code> traz tudo numa consulta só, e é por isso que ele aparece em todas as consultas de listagem do projeto.</p>
+  <div class="box cuidado"><span class="rot">open-in-view: true</span><p>Com essa opção, a sessão do Hibernate fica aberta até o fim da renderização do HTML. Assim, um acesso LAZY dentro do template Thymeleaf funciona, em vez de lançar <code>LazyInitializationException</code>. É conveniente, mas esconde N+1 que acontecem na tela e segura uma conexão do banco durante toda a requisição. Muitas equipes desligam a opção e carregam explicitamente o que a tela precisa.</p></div>
+  <div class="exs-titulo">Exercícios</div>
+  <details class="ex"><summary>1. Escreva a assinatura derivada para "regras ativas de um local, ordenadas por id".</summary><div><pre><code class="language-java">List&lt;ReorderRule> findByLocationIdAndActiveTrueOrderById(Long locationId);</code></pre></div></details>
+  <details class="ex"><summary>2. O que acontece com <code>sum(q.quantity)</code> sem <code>coalesce</code> para um produto sem saldo?</summary><div><p>A consulta devolve <code>null</code>. <code>onHand(...).add(incoming(...))</code> lançaria <code>NullPointerException</code> e a tela de previsão quebraria para produtos novos.</p></div></details>
+</section>
+
+<section class="cap" id="c14" data-titulo="Árvore de locais">
+  <div class="cap-head"><span class="etiqueta"><span>WH/APOSTILA/14</span><i></i></span><span class="nivel">Avançado</span></div>
+  <h3>Árvores no banco: a técnica do caminho materializado</h3>
+  <p>Locais formam uma árvore: <code>WH</code> contém <code>WH/Estoque</code>, que contém <code>WH/Estoque/Prateleira A</code>. A pergunta "quanto tenho em WH/Estoque, contando as prateleiras?" exige achar todos os descendentes. Há três formas clássicas de guardar árvores:</p>
+  <div class="tabela"><table>
+    <thead><tr><th>Técnica</th><th>Como guarda</th><th>Buscar a subárvore</th></tr></thead>
+    <tbody>
+      <tr><td>Lista de adjacência</td><td>Só <code>parent_id</code></td><td>Consulta recursiva (<code>WITH RECURSIVE</code>)</td></tr>
+      <tr><td><strong>Caminho materializado</strong></td><td><code>parent_id</code> + <code>full_name = 'WH/Estoque/Prateleira A'</code></td><td><code>like 'WH/Estoque/%'</code></td></tr>
+      <tr><td>Nested sets / closure table</td><td>Intervalos ou tabela de pares ancestral-descendente</td><td>Rápido, mas atualização complexa</td></tr>
+    </tbody>
+  </table></div>
+  <p>O projeto usa o <strong>caminho materializado</strong>, como o Odoo. A coluna <code>full_name</code> é única e toda consulta por subárvore vira um filtro simples de texto, que o banco atende com índice:</p>
+  <pre><code class="language-sql">where (l.full_name = 'WH/Estoque' or l.full_name like 'WH/Estoque/%')</code></pre>
+  <p>O custo aparece na <strong>escrita</strong>: renomear ou mover um local exige reescrever o caminho de todos os descendentes.</p>
+  <p class="arquivo">service/LocationService.java</p>
+  <pre><code class="language-java">public Location update(Long id, String name, Long parentId, LocationUsage usage, boolean active) {
+    var location = get(id);
+    var parent = parentId == null ? null : get(parentId);
+    if (parent != null &amp;&amp; parent.isChildOf(location)) {
+        throw new BusinessException("Um local não pode ficar dentro de si mesmo ou de um sublocal.");
+    }
+    String oldPath = location.getFullName();
+    String newPath = path(parent, validName(name));
+    if (!newPath.equals(oldPath)) {
+        ensureUnique(newPath);
+        for (Location child : locations.findSubtree(oldPath)) {
+            child.setFullName(newPath + child.getFullName().substring(oldPath.length()));
+        }
+    }
+    ...
+}</code></pre>
+  <p>Três proteções importantes: impedir ciclos (mover um local para dentro do próprio filho), garantir caminho único e proibir <code>/</code> no nome (<code>validName</code>), já que a barra é o separador.</p>
+  <div class="box lab"><span class="rot">Desafio: um bug real escondido aqui</span><p>Em <code>LIKE</code>, o caractere <code>_</code> significa "qualquer caractere" e <code>%</code> significa "qualquer sequência". O nome de um local pode conter <code>_</code>. Um local chamado <code>A_1</code> tem subárvore buscada com <code>like 'WH/A_1/%'</code>, que também casa com <code>WH/AB1/...</code>. O saldo de outro local seria somado por engano. A versão Node deste repositório teve exatamente esse bug na busca de produtos, e a correção foi escapar os curingas (<code>escaparLike</code> + <code>ESCAPE '\'</code>). Como você corrigiria no Java? (Resposta no Capítulo 32.)</p></div>
+</section>
+
+<!-- ============================== PARTE V ============================== -->
+<div class="parte" id="parte-5" data-parte="V · Núcleo">
+  <div class="eyebrow">Parte V</div>
+  <h2>O núcleo do estoque</h2>
+  <p>Saldos, movimentos, a função que aplica um movimento, as travas que impedem estoque negativo sob concorrência, o ajuste de inventário e a previsão.</p>
+</div>
+
+<section class="cap" id="c15" data-titulo="Saldo e movimento">
+  <div class="cap-head"><span class="etiqueta"><span>WH/APOSTILA/15</span><i></i></span><span class="nivel">Intermediário</span></div>
+  <h3>StockQuant e StockMove: o que existe e o que se moveu</h3>
+  <p>O núcleo tem duas entidades com papéis opostos:</p>
+  <div class="tabela"><table>
+    <thead><tr><th></th><th>StockQuant (saldo)</th><th>StockMove (movimento)</th></tr></thead>
+    <tbody>
+      <tr><td>Responde</td><td>Quanto existe agora?</td><td>O que aconteceu ou vai acontecer?</td></tr>
+      <tr><td>Chave</td><td>(produto, local), única</td><td>id; vários por produto</td></tr>
+      <tr><td>Muda?</td><td>Sim, a cada movimento concluído</td><td>Só de estado; quantidade e locais ficam como registro</td></tr>
+      <tr><td>Existe em</td><td>Só locais internos</td><td>Entre quaisquer dois locais</td></tr>
+    </tbody>
+  </table></div>
+  <p>O saldo é um <strong>cache</strong> dos movimentos concluídos. Em teoria, dá para recalcular o saldo de qualquer local somando entradas DONE e subtraindo saídas DONE. Na prática, guardar o saldo pronto torna a consulta "quanto tenho" instantânea. O preço é manter os dois sincronizados, e é exatamente o que <code>applyMove</code> faz numa única transação.</p>
+  <h4>O ciclo de vida de um movimento</h4>
+  <pre class="mermaid">stateDiagram-v2
+  [*] --> DRAFT
+  DRAFT --> CONFIRMED: operação confirmada
+  DRAFT --> DONE: validar direto (passa por CONFIRMED)
+  CONFIRMED --> DONE: applyMove()
+  DRAFT --> CANCELLED
+  CONFIRMED --> CANCELLED
+  DONE --> [*]
+  CANCELLED --> [*]
+  note right of CONFIRMED: conta na previsão
+  note right of DONE: está no saldo (StockQuant)</pre>
+  <p>Repare que nenhuma transição sai de <code>DONE</code>. Um movimento concluído é <strong>imutável</strong>. Para corrigir um erro, você cria o movimento inverso. É a mesma regra da contabilidade (não se apaga um lançamento, faz-se o estorno) e é o que dá valor de auditoria ao histórico. A versão Node segue a mesma regra: "Movimentações são imutáveis: para corrigir um lançamento, registre a movimentação inversa".</p>
+</section>
+
+<section class="cap" id="c16" data-titulo="applyMove passo a passo">
+  <div class="cap-head"><span class="etiqueta"><span>WH/APOSTILA/16</span><i></i></span><span class="nivel">Avançado</span></div>
+  <h3>applyMove: a função mais importante do sistema</h3>
+  <p>Toda mudança de saldo, seja recebimento, entrega, transferência, ajuste ou produção, passa por aqui:</p>
+  <p class="arquivo">service/StockService.java</p>
+  <pre><code class="language-java">public void applyMove(StockMove move) {
+    // 1. Um movimento só pode ser aplicado uma vez
+    if (move.getState() == MoveState.DONE || move.getState() == MoveState.CANCELLED) {
+        throw new BusinessException("O movimento " + move.getReference() + " já foi " + ...);
+    }
+    var product = move.getProduct();
+    var source = move.getSourceLocation();
+    var dest = move.getDestLocation();
+    BigDecimal quantity = move.getQuantity();
+
+    // 2. Saída de local interno: trava os saldos, confere e consome
+    if (source.isInternal()) {
+        List&lt;StockQuant> available = quants.findAvailableForUpdate(product.getId(), source.getFullName());
+        BigDecimal total = available.stream().map(StockQuant::getQuantity).reduce(BigDecimal.ZERO, BigDecimal::add);
+        if (total.compareTo(quantity) &lt; 0) {
+            throw new BusinessException("Estoque insuficiente de %s em %s: disponível %s, necessário %s." ...);
+        }
+        BigDecimal remaining = quantity;
+        for (StockQuant quant : available) {
+            BigDecimal take = quant.getQuantity().min(remaining);
+            quant.setQuantity(quant.getQuantity().subtract(take));
+            remaining = remaining.subtract(take);
+            if (remaining.signum() == 0) break;
+        }
+    }
+
+    // 3. Entrada em local interno: trava (ou cria) o saldo e soma
+    if (dest.isInternal()) {
+        var quant = lockQuant(product, dest);
+        quant.setQuantity(quant.getQuantity().add(quantity));
+    }
+
+    // 4. Marca como concluído
+    move.setState(MoveState.DONE);
+    move.setDate(LocalDateTime.now());
+}</code></pre>
+  <h4>As quatro decisões de projeto</h4>
+  <ol>
+    <li><strong>Idempotência por estado.</strong> Aplicar duas vezes o mesmo movimento dobraria o estoque. A verificação inicial transforma esse bug silencioso num erro explícito.</li>
+    <li><strong>Origem e destino tratados de forma independente.</strong> O código não pergunta "é recebimento ou entrega?". Ele pergunta "a origem é interna?" e "o destino é interno?". Recebimento (fornecedor → estoque) só executa o passo 3; entrega (estoque → cliente) só o passo 2; transferência executa os dois. Um único código cobre todos os casos.</li>
+    <li><strong>Sair de um local consome também os sublocais.</strong> Uma entrega a partir de <code>WH/Estoque</code> pode pegar produtos que estão em <code>WH/Estoque/Prateleira A</code>. A consulta ordena por <code>fullName</code>, então o próprio local é consumido primeiro, depois as prateleiras em ordem alfabética.</li>
+    <li><strong>Saldo nunca negativo.</strong> A conferência acontece antes de qualquer alteração, e o banco tem a trava descrita no próximo capítulo.</li>
+  </ol>
+  <h4>Exemplo numérico (teste <code>deliveryConsumesSublocations</code>)</h4>
+  <div class="contas">Saldos iniciais        WH/Estoque = 2    WH/Estoque/Prateleira X = 3
+Entrega de 4 a partir de WH/Estoque
+findAvailableForUpdate → [WH/Estoque: 2, WH/Estoque/Prateleira X: 3]   (ordem por fullName)
+  take = min(2, 4) = 2   → WH/Estoque = 0,  remaining = 2
+  take = min(3, 2) = 2   → Prateleira X = 1, remaining = 0 → para
+Resultado              onHand(WH/Estoque) = 0 + 1 = 1   onHand(Prateleira X) = 1</div>
+  <p>Note que <code>onHand(WH/Estoque)</code> devolve 1, e não 0, porque a consulta de saldo soma a subárvore inteira.</p>
+</section>
+
+<section class="cap" id="c17" data-titulo="Concorrência e travas">
+  <div class="cap-head"><span class="etiqueta"><span>WH/APOSTILA/17</span><i></i></span><span class="nivel">Avançado</span></div>
+  <h3>Concorrência: por que <code>SELECT ... FOR UPDATE</code></h3>
+  <p>Imagine dois operadores validando entregas do mesmo produto ao mesmo tempo, com saldo 10 e entregas de 8 cada. Sem trava:</p>
+  <pre class="mermaid">sequenceDiagram
+  participant A as Transação A (entrega 8)
+  participant DB as Banco (saldo = 10)
+  participant B as Transação B (entrega 8)
+  A->>DB: lê saldo → 10
+  B->>DB: lê saldo → 10
+  A->>A: 10 ≥ 8, ok → novo saldo 2
+  B->>B: 10 ≥ 8, ok → novo saldo 2
+  A->>DB: grava 2, COMMIT
+  B->>DB: grava 2, COMMIT
+  Note over DB: 16 unidades entregues, saldo final 2. Deveria ter recusado a B.</pre>
+  <p>Esse é o problema da <strong>atualização perdida</strong> (<em>lost update</em>): as duas transações leram o mesmo valor e a segunda sobrescreveu a primeira. A conferência de saldo do Capítulo 16, sozinha, não protege nada, porque cada transação conferiu um valor que já estava velho.</p>
+  <h4>A solução do projeto: trava pessimista</h4>
+  <p class="arquivo">repository/StockQuantRepository.java</p>
+  <pre><code class="language-java">@Lock(LockModeType.PESSIMISTIC_WRITE)
+@Query("""
+        select q from StockQuant q
+        where q.product.id = :productId and q.quantity > 0
+          and (q.location.fullName = :path or q.location.fullName like concat(:path, '/%'))
+        order by q.location.fullName
+        """)
+List&lt;StockQuant> findAvailableForUpdate(@Param("productId") Long productId, @Param("path") String path);</code></pre>
+  <p><code>PESSIMISTIC_WRITE</code> faz o Hibernate acrescentar <code>FOR UPDATE</code> ao SQL. O PostgreSQL trava as linhas lidas até o fim da transação. Agora a transação B fica <strong>esperando</strong> na leitura até a A terminar, e então lê o saldo já atualizado (2), confere que 2 &lt; 8 e recusa com "Estoque insuficiente". Exatamente o comportamento correto.</p>
+  <h4>Detalhes que fazem diferença</h4>
+  <ul>
+    <li><strong><code>order by</code> evita deadlock.</strong> Se A travasse as linhas na ordem (Prateleira, Estoque) e B na ordem (Estoque, Prateleira), cada uma poderia segurar uma e esperar a outra para sempre. Travar sempre na mesma ordem (por <code>fullName</code>) elimina esse ciclo. O PostgreSQL detecta deadlocks e aborta uma das transações, mas a ordem fixa evita que aconteçam.</li>
+    <li><strong>O destino também é travado</strong> (<code>findForUpdate</code> em <code>lockQuant</code>), porque duas entradas simultâneas sofreriam a mesma atualização perdida na soma.</li>
+    <li><strong>A janela da trava é curta</strong>: dura só a transação de <code>validate</code>. Transações longas com travas seguram outros usuários.</li>
+  </ul>
+  <h4>Pessimista versus otimista</h4>
+  <div class="tabela"><table>
+    <thead><tr><th></th><th>Pessimista (<code>FOR UPDATE</code>)</th><th>Otimista (<code>@Version</code>)</th></tr></thead>
+    <tbody>
+      <tr><td>Ideia</td><td>Trava antes de ler; os outros esperam</td><td>Não trava; no UPDATE confere se a versão mudou</td></tr>
+      <tr><td>Em conflito</td><td>Espera e depois segue com o valor certo</td><td>Lança <code>OptimisticLockException</code>; é preciso repetir</td></tr>
+      <tr><td>Bom quando</td><td>Conflitos são frequentes (saldo de produto popular)</td><td>Conflitos são raros (editar o cadastro de um produto)</td></tr>
+    </tbody>
+  </table></div>
+  <p>Saldo de estoque é o caso típico de pessimista: vários pedidos disputam o mesmo produto o dia inteiro. A versão Node resolve o mesmo problema de outro jeito: abre a transação com <code>BEGIN IMMEDIATE</code>, que no SQLite trava o banco inteiro para escrita. É mais grosso, mas o SQLite só aceita um escritor por vez de qualquer forma.</p>
+  <div class="exs-titulo">Exercícios</div>
+  <details class="ex"><summary>1. Por que a conferência "saldo ≥ quantidade" sem trava não basta?</summary><div><p>Porque o valor conferido pode mudar entre a leitura e a escrita. Só a trava garante que ninguém altera o saldo nesse intervalo. Conferir e gravar precisam ser uma operação atômica do ponto de vista das outras transações.</p></div></details>
+  <details class="ex"><summary>2. Uma alternativa sem trava explícita: <code>update stock_quant set quantity = quantity - 8 where id = ? and quantity >= 8</code>. Funciona?</summary><div><p>Sim, para um único saldo. O UPDATE é atômico e a condição é conferida com a linha travada. Se nenhuma linha for afetada, não havia saldo. O projeto não usa essa forma porque uma saída pode precisar consumir vários saldos (local e sublocais), e aí é mais simples travar todos e distribuir no Java.</p></div></details>
+</section>
+
+<section class="cap" id="c18" data-titulo="Ajuste de inventário">
+  <div class="cap-head"><span class="etiqueta"><span>WH/APOSTILA/18</span><i></i></span><span class="nivel">Intermediário</span></div>
+  <h3>Ajuste de inventário: corrigindo o sistema pela contagem física</h3>
+  <p>O sistema e a prateleira divergem: perdas, furtos, erros de digitação. A contagem física é a verdade, e o ajuste faz o sistema concordar com ela <strong>sem quebrar o modelo de movimentos</strong>:</p>
+  <p class="arquivo">service/StockService.java</p>
+  <pre><code class="language-java">public StockMove adjust(Product product, Location location, BigDecimal counted) {
+    if (!location.isInternal()) throw new BusinessException("Ajustes só podem ser feitos em locais internos.");
+    if (counted == null || counted.signum() &lt; 0) throw new BusinessException("A quantidade contada deve ser zero ou positiva.");
+
+    BigDecimal current = quants.findByProductIdAndLocationId(product.getId(), location.getId())
+            .map(StockQuant::getQuantity).orElse(BigDecimal.ZERO);
+    BigDecimal diff = counted.subtract(current);
+    if (diff.signum() == 0) return null;                       // nada a ajustar
+
+    var inventory = locationService.virtual(LocationUsage.INVENTORY);
+    var move = diff.signum() > 0
+            ? new StockMove(product, diff, inventory, location, "Ajuste de inventário")          // sobrou: entra
+            : new StockMove(product, diff.negate(), location, inventory, "Ajuste de inventário"); // faltou: sai
+    move.setState(MoveState.CONFIRMED);
+    applyMove(move);
+    return moves.save(move);
+}</code></pre>
+  <p>O usuário informa a quantidade <em>contada</em>, não a diferença. O sistema calcula a diferença e gera um movimento de ou para o local virtual <code>Virtual/Ajuste de Inventário</code>. Benefícios:</p>
+  <ul>
+    <li>O histórico mostra quanto foi ajustado, quando e onde. Um relatório de perdas é só somar os movimentos que entram no local de ajuste.</li>
+    <li>O saldo do local virtual, se fosse calculado, seria o total líquido de perdas e sobras: um número contábil real.</li>
+    <li>O ajuste reusa <code>applyMove</code>, então herda as travas e as validações.</li>
+  </ul>
+  <div class="box cuidado"><span class="rot">Detalhe</span><p>O ajuste olha o saldo <em>exatamente</em> no local informado (<code>findByProductIdAndLocationId</code>), não a subárvore. Contar 5 em <code>WH/Estoque</code> não mexe no que está nas prateleiras. Faz sentido: a contagem física é feita prateleira por prateleira.</p></div>
+  <p>Os dados de demonstração usam o ajuste para criar o estoque inicial (<code>stockService.adjust(cornerDesk, stock, qty("4"))</code>). Não existe "inserir saldo direto": até a carga inicial passa pelo modelo de movimentos.</p>
+</section>
+
+<section class="cap" id="c19" data-titulo="Previsão de estoque">
+  <div class="cap-head"><span class="etiqueta"><span>WH/APOSTILA/19</span><i></i></span><span class="nivel">Avançado</span></div>
+  <h3>Previsão: saldo + entradas − saídas</h3>
+  <pre><code class="language-java">/** Previsão = saldo + entradas confirmadas - saídas confirmadas. */
+public BigDecimal forecast(Product product, Location location) {
+    return onHand(product, location).add(incoming(product, location)).subtract(outgoing(product, location));
+}</code></pre>
+  <p>As entradas e saídas vêm de movimentos <code>CONFIRMED</code>. A parte sutil está em <em>o que conta como entrada</em> para uma subárvore:</p>
+  <p class="arquivo">repository/StockMoveRepository.java</p>
+  <pre><code class="language-java">/** Entradas confirmadas (ainda não concluídas) na subárvore do local. */
+@Query("""
+        select coalesce(sum(m.quantity), 0) from StockMove m
+        where m.product.id = :productId and m.state = com.estoque.domain.MoveState.CONFIRMED
+          and (m.destLocation.fullName = :path or m.destLocation.fullName like concat(:path, '/%'))
+          and not (m.sourceLocation.fullName = :path or m.sourceLocation.fullName like concat(:path, '/%'))
+        """)
+BigDecimal sumIncoming(...);</code></pre>
+  <p>O <code>and not (...)</code> exclui movimentos que <strong>começam e terminam dentro</strong> da subárvore. Uma transferência de <code>WH/Estoque</code> para <code>WH/Estoque/Prateleira A</code> não muda quanto existe em <code>WH/Estoque</code> (contando as prateleiras). Sem essa condição, ela contaria como entrada e saída ao mesmo tempo, o que dá o mesmo total, mas inflaria as colunas "entradas" e "saídas" nos relatórios.</p>
+  <h4>A tela de previsão: saldo acumulado linha a linha</h4>
+  <p class="arquivo">web/ProductController.java</p>
+  <pre><code class="language-java">BigDecimal balance = onHand;
+for (StockMove move : moves.findPending(id, selected.getFullName())) {   // ordenados por data
+    boolean incoming = move.getDestLocation().isChildOf(selected);
+    boolean outgoing = move.getSourceLocation().isChildOf(selected);
+    if (incoming == outgoing) {
+        continue; // movimento interno à subárvore: não altera a previsão
+    }
+    BigDecimal delta = incoming ? move.getQuantity() : move.getQuantity().negate();
+    balance = balance.add(delta);
+    rows.add(new ForecastRow(move, delta, balance));
+}</code></pre>
+  <p>Isso produz uma tabela como um extrato bancário: cada movimento futuro, sua variação e o saldo projetado depois dele. É assim que o usuário descobre <em>quando</em> o estoque vai ficar negativo, e não só <em>se</em> vai.</p>
+  <div class="box lab"><span class="rot">Limitação para pensar</span><p>A previsão total soma todos os movimentos confirmados, sem olhar a data. Uma entrada prevista para daqui a 30 dias "cobre" uma saída de amanhã. Para um planejamento fino, o certo seria calcular a previsão <em>até uma data</em> (por exemplo, até a data do próximo recebimento possível, considerando o lead time). O Odoo faz isso. Aqui fica como melhoria (Capítulo 33).</p></div>
+</section>
+
+<!-- ============================== PARTE VI ============================== -->
+<div class="parte" id="parte-6" data-parte="VI · Processos">
+  <div class="eyebrow">Parte VI</div>
+  <h2>Operações, compras e produção</h2>
+  <p>Os documentos que geram movimentos e as máquinas de estado que os controlam.</p>
+</div>
+
+<section class="cap" id="c20" data-titulo="Operações (pickings)">
+  <div class="cap-head"><span class="etiqueta"><span>WH/APOSTILA/20</span><i></i></span><span class="nivel">Intermediário</span></div>
+  <h3>Operações: recebimento, entrega e transferência</h3>
+  <p>Um <code>Picking</code> é um documento com cabeçalho (tipo, parceiro, origem, destino, data) e linhas (os <code>StockMove</code>). O tipo define os locais padrão:</p>
+  <pre><code class="language-java">switch (type) {
+    case RECEIPT -> { origem = Fornecedores; destino = estoque padrão }
+    case DELIVERY -> { origem = estoque padrão; destino = Clientes }
+    case INTERNAL -> { origem = estoque; destino = estoque (o usuário escolhe a prateleira) }
+}</code></pre>
+  <pre class="mermaid">stateDiagram-v2
+  [*] --> DRAFT: save()
+  DRAFT --> READY: confirm()
+  DRAFT --> DONE: validate()
+  READY --> DONE: validate()
+  DRAFT --> CANCELLED: cancel()
+  READY --> CANCELLED: cancel()
+  DRAFT --> [*]: delete()
+  CANCELLED --> [*]: delete()</pre>
+  <h4>Regras aplicadas em <code>save</code></h4>
+  <ul>
+    <li>Só operações <code>DRAFT</code> ou <code>READY</code> podem ser alteradas (<code>isEditable()</code>).</li>
+    <li>Origem e destino precisam ser diferentes, e pelo menos um deles precisa ser interno (mover de fornecedor para cliente direto não faz sentido aqui).</li>
+    <li>Cada linha precisa de produto e quantidade positiva. Linhas totalmente vazias são ignoradas: a tela sempre deixa uma linha em branco para adicionar produtos.</li>
+    <li>Os movimentos herdam o estado da operação: se ela já está <code>READY</code>, os novos movimentos nascem <code>CONFIRMED</code>.</li>
+  </ul>
+  <h4>Por que existe o estado READY</h4>
+  <p>Se uma entrega fosse direto de rascunho para concluída, a previsão nunca a enxergaria. O <code>READY</code> é a promessa: "vamos entregar 14 cadeiras na sexta". A partir daí, a tela de reposição já sabe que faltam cadeiras, antes de a entrega acontecer.</p>
+  <h4>validate e a ordem de compra</h4>
+  <pre><code class="language-java">var order = picking.getPurchaseOrder();
+if (order != null &amp;&amp; pickings.findByPurchaseOrderId(order.getId()).stream()
+        .allMatch(p -> p.getState() == PickingState.DONE || p.getState() == PickingState.CANCELLED)) {
+    order.setState(PurchaseState.DONE);
+}</code></pre>
+  <p>Validar o último recebimento de um pedido de compra fecha o pedido. A regra usa <code>allMatch</code> pensando em recebimentos parciais: um pedido pode gerar mais de um recebimento.</p>
+  <h4>Referências legíveis</h4>
+  <p class="arquivo">service/SequenceService.java</p>
+  <pre><code class="language-java">private String next(String sequence) {
+    long value = jdbc.sql("select nextval('" + sequence + "')").query(Long.class).single();
+    return "%05d".formatted(value);       // 7 → "00007"
+}</code></pre>
+  <p>Essa é a única concatenação de SQL do projeto, e o comentário explica por que ela é segura: o nome da sequência vem sempre de constantes da própria classe, nunca do usuário. É um bom hábito documentar exceções a regras de segurança no próprio código.</p>
+</section>
+
+<section class="cap" id="c21" data-titulo="Compras">
+  <div class="cap-head"><span class="etiqueta"><span>WH/APOSTILA/21</span><i></i></span><span class="nivel">Intermediário</span></div>
+  <h3>Compras: da cotação ao recebimento</h3>
+  <pre class="mermaid">stateDiagram-v2
+  [*] --> DRAFT: Solicitação de cotação
+  DRAFT --> CONFIRMED: confirm() cria recebimento READY
+  CONFIRMED --> DONE: último recebimento validado
+  DRAFT --> CANCELLED: cancel()
+  CONFIRMED --> CANCELLED: cancel() (se nada foi recebido)</pre>
+  <p>O ponto de integração entre módulos está em <code>confirm</code>:</p>
+  <pre><code class="language-java">public Picking confirm(Long id) {
+    var order = get(id);
+    if (order.getState() != PurchaseState.DRAFT) throw ...;
+    order.setState(PurchaseState.CONFIRMED);
+    return pickingService.createReceipt(order);   // recebimento READY: entra na previsão
+}</code></pre>
+  <p>O pedido de compra em si não mexe no estoque. Ele gera um recebimento com movimentos <code>CONFIRMED</code> de Fornecedores para o local de destino. A partir desse instante a previsão sobe, e quando o recebimento é validado, o saldo sobe.</p>
+  <h4>addToDraft: juntar em vez de multiplicar pedidos</h4>
+  <pre><code class="language-java">var order = orders.findFirstByPartnerAndDestLocationAndStateOrderByIdDesc(product.getSupplier(), dest, PurchaseState.DRAFT)
+        .orElseGet(() -> { /* cria nova cotação para o fornecedor */ });
+order.getLines().stream()
+        .filter(l -> l.getProduct().getId().equals(product.getId()))
+        .findFirst()
+        .ifPresentOrElse(
+                l -> l.setQuantity(l.getQuantity().add(quantity)),        // já tem a linha: soma
+                () -> order.addLine(new PurchaseOrderLine(product, quantity, product.getCost())));
+</code></pre>
+  <p>Quando a reposição pede 5 cadeiras e 3 luminárias do mesmo fornecedor, as duas vão para <strong>a mesma cotação aberta</strong>. Na vida real isso é um único pedido ao fornecedor, com um único frete.</p>
+  <h4>Cancelamento em cascata</h4>
+  <p><code>cancel</code> percorre os recebimentos do pedido: se algum já foi concluído, recusa (a mercadoria já entrou, cancelar seria mentir); se estão abertos, cancela-os também, o que tira seus movimentos da previsão.</p>
+</section>
+
+<section class="cap" id="c22" data-titulo="Produção">
+  <div class="cap-head"><span class="etiqueta"><span>WH/APOSTILA/22</span><i></i></span><span class="nivel">Intermediário</span></div>
+  <h3>Ordens de produção e o local virtual de produção</h3>
+  <p>Produtos com rota <code>MANUFACTURE</code> são repostos por fabricação. O fluxo usa a mesma ideia das compras: ao confirmar, cria um movimento <code>CONFIRMED</code> de <code>Virtual/Produção</code> para o estoque, com data na data programada.</p>
+  <pre><code class="language-java">private void confirm(ManufacturingOrder order) {
+    var move = new StockMove(order.getProduct(), order.getQuantity(),
+            locationService.virtual(LocationUsage.PRODUCTION), order.getLocation(), order.getReference());
+    move.setState(MoveState.CONFIRMED);
+    move.setDate(order.getScheduledDate().atTime(8, 0));
+    move.setManufacturingOrder(order);
+    moves.save(move);
+    order.setState(ProductionState.CONFIRMED);
+}
+
+public void produce(Long id) {          // concluir: aplica o movimento ao saldo
+    moves.findByManufacturingOrderId(id).stream()
+            .filter(m -> m.getState() == MoveState.CONFIRMED)
+            .forEach(stockService::applyMove);
+    ...
+}</code></pre>
+  <div class="box lab"><span class="rot">O que falta para ser um MRP de verdade</span><p>Fabricar uma mesa consome tampo, pés e parafusos. Um sistema completo teria uma <strong>lista de materiais</strong> (BOM) e, ao confirmar a ordem, criaria também movimentos do estoque para <code>Virtual/Produção</code> com os componentes. Assim a previsão dos componentes cairia e a reposição sugeriria comprá-los: é o efeito cascata do MRP. O modelo de movimentos já suporta isso sem mudar <code>applyMove</code>; só falta a entidade BOM e os movimentos de consumo.</p></div>
+</section>
+
+<!-- ============================== PARTE VII ============================== -->
+<div class="parte" id="parte-7" data-parte="VII · Reposição">
+  <div class="eyebrow">Parte VII</div>
+  <h2>Reposição: o cérebro do sistema</h2>
+  <p>Regras mín./máx., o cálculo de quanto pedir, a tela de reposição e a execução automática agendada.</p>
+</div>
+
+<section class="cap" id="c23" data-titulo="Regras mín./máx.">
+  <div class="cap-head"><span class="etiqueta"><span>WH/APOSTILA/23</span><i></i></span><span class="nivel">Avançado</span></div>
+  <h3>Regras mín./máx. e a fórmula de quanto pedir</h3>
+  <p>Uma <code>ReorderRule</code> diz: "para este produto, neste local, quando a previsão cair abaixo de <strong>mín.</strong>, peça o suficiente para voltar ao <strong>máx.</strong>, em lotes de <strong>múltiplo</strong>". Existe no máximo uma regra por par produto-local (restrição <code>unique</code>).</p>
+  <h4>A fórmula</h4>
+  <pre><code class="language-java">public static BigDecimal quantityToOrder(BigDecimal forecast, BigDecimal min, BigDecimal max,
+                                         BigDecimal multiple, boolean toMax) {
+    if (!toMax &amp;&amp; forecast.compareTo(min) >= 0) {
+        return BigDecimal.ZERO;                            // ainda acima do mínimo
+    }
+    BigDecimal qty = max.max(min).subtract(forecast);      // o que falta até o máximo
+    if (qty.signum() &lt;= 0) {
+        return BigDecimal.ZERO;
+    }
+    if (multiple != null &amp;&amp; multiple.signum() > 0) {
+        qty = qty.divide(multiple, 0, RoundingMode.CEILING).multiply(multiple);   // arredonda para cima
+    }
+    return qty;
+}</code></pre>
+  <p>Três sutilezas:</p>
+  <ul>
+    <li><strong>Igual ao mínimo não dispara.</strong> A condição é <code>forecast >= min</code> → nada a pedir. O pedido acontece só <em>abaixo</em> do mínimo.</li>
+    <li><strong><code>max.max(min)</code></strong> protege contra um cadastro com máximo menor que o mínimo: usa o maior dos dois.</li>
+    <li><strong>É <code>static</code> e pura</strong>: não acessa banco nem estado. Por isso ela é testada com uma tabela de casos, sem Spring, em milissegundos.</li>
+  </ul>
+  <p class="arquivo">src/test/java/com/estoque/service/ReplenishmentCalculationTest.java</p>
+  <div class="tabela"><table>
+    <thead><tr><th class="num">Previsão</th><th class="num">Mín.</th><th class="num">Máx.</th><th class="num">Múltiplo</th><th class="num">Pedir</th><th>Por quê</th></tr></thead>
+    <tbody>
+      <tr><td class="num">−1</td><td class="num">0</td><td class="num">0</td><td class="num">1</td><td class="num">1</td><td>Regra manual 0/0 cobre o negativo</td></tr>
+      <tr><td class="num">4</td><td class="num">5</td><td class="num">10</td><td class="num">1</td><td class="num">6</td><td>Abaixo do mínimo: completa até o máximo</td></tr>
+      <tr><td class="num">5</td><td class="num">5</td><td class="num">10</td><td class="num">1</td><td class="num">0</td><td>Igual ao mínimo não dispara</td></tr>
+      <tr><td class="num">12</td><td class="num">0</td><td class="num">0</td><td class="num">1</td><td class="num">0</td><td>Acima do mínimo</td></tr>
+      <tr><td class="num">3</td><td class="num">5</td><td class="num">10</td><td class="num">4</td><td class="num">8</td><td>Faltam 7; múltiplo de 4 acima é 8</td></tr>
+      <tr><td class="num">0</td><td class="num">5</td><td class="num">3</td><td class="num">1</td><td class="num">5</td><td>Máx. menor que mín.: usa o mín.</td></tr>
+    </tbody>
+  </table></div>
+  <h4>"Pedir até o máximo"</h4>
+  <p>Com <code>toMax = true</code>, a primeira condição é ignorada: pede-se o necessário para chegar ao máximo mesmo acima do mínimo. Útil quando o comprador já vai fazer um pedido ao fornecedor e quer aproveitar o frete. Exemplo do teste: previsão 7, mín. 5, máx. 10 → pede 3.</p>
+</section>
+
+<section class="cap" id="c24" data-titulo="A tela de reposição">
+  <div class="cap-head"><span class="etiqueta"><span>WH/APOSTILA/24</span><i></i></span><span class="nivel">Avançado</span></div>
+  <h3>Previsão virtual, em andamento e a tela de reposição</h3>
+  <p>Se a reposição usasse só a previsão, clicar "Pedir" duas vezes geraria dois pedidos: a cotação criada no primeiro clique está em rascunho e não conta na previsão. A solução é a coluna <strong>Em andamento</strong>:</p>
+  <p class="arquivo">service/ReplenishmentLine.java</p>
+  <pre><code class="language-java">public ReplenishmentLine(ReorderRule rule, BigDecimal onHand, BigDecimal forecast, BigDecimal inProgress) {
+    ...
+    BigDecimal virtual = forecast.add(inProgress);    // previsão + cotações/ordens em rascunho
+    this.toOrder = ReplenishmentService.quantityToOrder(virtual, rule.getMinQty(), rule.getMaxQty(), rule.getMultipleQty(), false);
+    this.toMax  = ReplenishmentService.quantityToOrder(virtual, rule.getMinQty(), rule.getMaxQty(), rule.getMultipleQty(), true);
+}</code></pre>
+  <p><code>inProgress</code> é a soma das cotações em rascunho (rota BUY) ou das ordens de produção em rascunho (rota MANUFACTURE) destinadas àquele local. Assim que você pede, a sugestão zera, e um segundo clique não duplica nada.</p>
+  <h4>Gatilho, adiamento e regras automáticas de "falta"</h4>
+  <ul>
+    <li><strong>Gatilho</strong> (<code>AUTO</code> ou <code>MANUAL</code>): regras automáticas são executadas pelo agendador; manuais só aparecem na tela para alguém decidir.</li>
+    <li><strong>Adiar</strong> (<code>snoozedUntil</code>): esconde a linha até uma data. Para quando o comprador já sabe da falta e não quer ver o alerta todo dia.</li>
+    <li><strong><code>syncManualRules</code></strong>: antes de montar a tela, o sistema cria regras 0/0 manuais para produtos com previsão <em>negativa</em> no estoque de cada armazém que ainda não tinham regra. Assim, uma venda de produto sem regra cadastrada aparece na reposição mesmo assim.</li>
+  </ul>
+  <div class="box cuidado"><span class="rot">Um GET que escreve</span><p><code>ReplenishmentController.list</code> é um <code>GET</code> e chama <code>syncManualRules()</code>, que insere regras. Pela semântica HTTP, GET não deveria ter efeitos colaterais: um robô de pré-carregamento ou um F5 criariam regras. Aqui o efeito é idempotente (só cria a regra se ela não existe), o que reduz o risco, mas uma alternativa mais limpa é rodar a sincronização no agendador ou no momento em que uma entrega é confirmada.</p></div>
+  <h4>Contadores da barra lateral</h4>
+  <p>O método <code>view</code> calcula as linhas e também os números da barra lateral (quantas regras por local, quantas automáticas e manuais). O detalhe interessante: o contador de um grupo considera <strong>todos os outros filtros, menos o do próprio grupo</strong>, igual ao Odoo. Se você filtrou "Automático", os contadores de locais mostram quantas automáticas há em cada local, mas o contador de gatilhos continua mostrando automático e manual, para você poder trocar.</p>
+  <div class="box lab"><span class="rot">Desempenho</span><p><code>view</code> chama <code>line(rule)</code> para cada regra, e cada <code>line</code> faz 5 consultas agregadas: saldo, saldo de novo (dentro de <code>forecast</code>), entradas, saídas e em andamento. Com 500 regras, são 2.500 consultas por abertura de tela. Funciona bem nos volumes de uma empresa pequena; para escalar, o caminho é uma consulta agrupada (<code>group by product_id, location</code>) que traga os quatro números de todas as regras de uma vez.</p></div>
+</section>
+
+<section class="cap" id="c25" data-titulo="Ciclo completo e agendador">
+  <div class="cap-head"><span class="etiqueta"><span>WH/APOSTILA/25</span><i></i></span><span class="nivel">Avançado</span></div>
+  <h3>O ciclo completo, número a número, e a reposição automática</h3>
+  <p>O teste <code>StockFlowIntegrationTest.fullReplenishmentCycle</code> percorre o sistema inteiro contra um PostgreSQL real. Acompanhe os números:</p>
+  <div class="tabela"><table>
+    <thead><tr><th>Passo</th><th>Ação</th><th class="num">Saldo</th><th class="num">Previsão</th><th class="num">Em andamento</th><th class="num">A pedir</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>Ajuste de inventário: contou 10</td><td class="num">10</td><td class="num">10</td><td class="num">0</td><td class="num">—</td></tr>
+      <tr><td>2</td><td>Entrega de 14 criada e confirmada (READY)</td><td class="num">10</td><td class="num">−4</td><td class="num">0</td><td class="num">—</td></tr>
+      <tr><td>3</td><td>Regra mín. 5 / máx. 20 criada</td><td class="num">10</td><td class="num">−4</td><td class="num">0</td><td class="num">24</td></tr>
+      <tr><td>4</td><td>"Pedir uma vez" → cotação P0000x em rascunho com 24</td><td class="num">10</td><td class="num">−4</td><td class="num">24</td><td class="num">0</td></tr>
+      <tr><td>5</td><td>Cotação confirmada → recebimento READY de 24</td><td class="num">10</td><td class="num">20</td><td class="num">0</td><td class="num">0</td></tr>
+      <tr><td>6</td><td>Recebimento validado; pedido vira DONE</td><td class="num">34</td><td class="num">20</td><td class="num">0</td><td class="num">0</td></tr>
+      <tr><td>7</td><td>Entrega de 14 validada</td><td class="num">20</td><td class="num">20</td><td class="num">0</td><td class="num">0</td></tr>
+    </tbody>
+  </table></div>
+  <div class="contas">Passo 3:  previsão virtual = −4 + 0 = −4  &lt; 5 (mín.)  →  20 − (−4) = 24
+Passo 4:  previsão virtual = −4 + 24 = 20 ≥ 5          →  0  (o segundo clique não duplica)
+Passo 5:  a cotação deixou de ser rascunho; o recebimento CONFIRMED entra na previsão: 10 + 24 − 14 = 20
+Passo 7:  sem movimentos pendentes, previsão = saldo = 20 = máximo da regra</div>
+  <p>Repare que no final o estoque fica <strong>exatamente no máximo</strong> da regra. É o objetivo do método mín./máx.</p>
+  <h4>Reposição automática agendada</h4>
+  <p class="arquivo">service/ReplenishmentScheduler.java</p>
+  <pre><code class="language-java">@Component
+@ConditionalOnProperty(name = "app.replenishment.scheduler-enabled", havingValue = "true", matchIfMissing = true)
+public class ReplenishmentScheduler {
+    @Scheduled(cron = "${app.replenishment.cron:0 */15 * * * *}")
+    public void run() {
+        var references = replenishment.runAutomatic();
+        if (!references.isEmpty()) {
+            log.info("Reposição automática gerou/atualizou: {}", String.join(", ", references));
+        }
+    }
+}</code></pre>
+  <ul>
+    <li>O cron do Spring tem 6 campos: segundo, minuto, hora, dia, mês, dia da semana. <code>0 */15 * * * *</code> = no segundo 0 de cada minuto múltiplo de 15.</li>
+    <li><code>@ConditionalOnProperty</code> permite desligar o bean inteiro por configuração. Os testes de integração fazem isso (<code>app.replenishment.scheduler-enabled=false</code>) para o agendador não criar pedidos no meio de um teste.</li>
+    <li><code>runAutomatic</code> ignora regras manuais, adiadas e produtos de compra sem fornecedor (com aviso no log). Um erro de cadastro em um produto não derruba a reposição dos outros.</li>
+  </ul>
+  <div class="box cuidado"><span class="rot">Em produção com várias instâncias</span><p>Se a aplicação rodar em duas réplicas, as duas executam o agendador ao mesmo tempo e podem duplicar pedidos. A solução comum é uma trava distribuída (por exemplo, a biblioteca ShedLock, que usa uma tabela do banco) para garantir uma única execução por janela.</p></div>
+  <div class="exs-titulo">Exercícios</div>
+  <details class="ex"><summary>1. No passo 3, se a regra tivesse múltiplo 10, quanto seria pedido?</summary><div><p>Faltam 24. <code>24 / 10 = 2,4</code>, que arredondado para cima dá 3. <code>3 × 10 = 30</code>. Após o recebimento, o saldo final seria 10 + 30 − 14 = 26, acima do máximo, que é o efeito esperado de comprar em caixas.</p></div></details>
+  <details class="ex"><summary>2. Por que o passo 5 zera "em andamento" e aumenta a previsão ao mesmo tempo?</summary><div><p>A quantidade só mudou de categoria. Em rascunho, a cotação é contada como "em andamento" (intenção de compra). Confirmada, ela vira um recebimento com movimentos CONFIRMED, que entram na previsão. A previsão virtual (previsão + em andamento) continua 20 nos dois momentos.</p></div></details>
+</section>
+
+<!-- ============================== PARTE VIII ============================== -->
+<div class="parte" id="parte-8" data-parte="VIII · Web e segurança">
+  <div class="eyebrow">Parte VIII</div>
+  <h2>Telas, API e segurança</h2>
+  <p>Como o usuário e outros sistemas conversam com o núcleo, e como o acesso é protegido.</p>
+</div>
+
+<section class="cap" id="c26" data-titulo="Spring MVC e Thymeleaf">
+  <div class="cap-head"><span class="etiqueta"><span>WH/APOSTILA/26</span><i></i></span><span class="nivel">Intermediário</span></div>
+  <h3>Spring MVC e Thymeleaf: telas renderizadas no servidor</h3>
+  <p>O módulo Java não tem SPA: o servidor monta o HTML. Um controller recebe a requisição, coloca dados no <code>Model</code> e devolve o nome de um template:</p>
+  <pre><code class="language-java">@GetMapping
+public String list(@RequestParam PickingType type, @RequestParam(required = false) PickingState state,
+                   @RequestParam(defaultValue = "") String q, @RequestParam(defaultValue = "0") int page,
+                   Model model) {
+    var result = pickings.search(type, states, q.trim(), PageRequest.of(Math.max(page, 0), PAGE_SIZE, ...));
+    model.addAttribute("page", result);
+    return "pickings/list";          // → src/main/resources/templates/pickings/list.html
+}</code></pre>
+  <p>O Spring converte os parâmetros da URL nos tipos declarados: <code>?type=DELIVERY</code> vira o enum <code>PickingType.DELIVERY</code>, <code>?page=2</code> vira <code>int</code>. Um valor inválido gera erro 400 antes de o seu código rodar.</p>
+  <h4>Templates Thymeleaf</h4>
+  <p>Thymeleaf usa atributos <code>th:*</code> em HTML válido. Um trecho real da tela de reposição:</p>
+  <pre><code class="language-xml">&lt;html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: layout(title='Reposição', content=~{::main})}">
+...
+&lt;form th:each="line : ${view.lines}" th:id="|qty-${line.rule.id}|" method="post"
+      th:action="@{/replenishment/{id}/quantities(id=${line.rule.id})}">&lt;/form>
+
+&lt;form method="post" th:action="@{/replenishment/run}" sec:authorize="hasRole('ADMIN')">
+    &lt;button class="btn btn-secondary btn-sm" type="submit">...&lt;/button>
+&lt;/form></code></pre>
+  <ul>
+    <li><code>th:replace="~{layout :: layout(...)}"</code>: a página se encaixa num layout comum (menu, cabeçalho), passado como fragmento.</li>
+    <li><code>th:each</code>: repete o elemento para cada item. <code>${...}</code> lê do Model.</li>
+    <li><code>@{...}</code>: monta URLs com o contexto da aplicação e parâmetros de caminho.</li>
+    <li><code>sec:authorize</code>: só mostra o botão para administradores (extra do Spring Security).</li>
+    <li>Todo texto inserido com <code>th:text</code> é escapado: um produto chamado <code>&lt;script></code> aparece como texto, sem executar (proteção contra XSS).</li>
+  </ul>
+  <h4>Formulários: binding e validação</h4>
+  <pre><code class="language-java">@PostMapping("/save")
+public String save(@Validated @ModelAttribute("form") PickingForm form, BindingResult result, Model model,
+                   Principal principal, RedirectAttributes redirect) {
+    if (result.hasErrors()) {
+        return formWithPicking(form, model);            // volta à tela com os erros por campo
+    }
+    try {
+        var picking = pickingService.save(form, principal.getName());
+        redirect.addFlashAttribute("success", "Operação " + picking.getReference() + " salva.");
+        return "redirect:/pickings/" + picking.getId();
+    } catch (BusinessException e) {
+        model.addAttribute("error", e.getMessage());     // erro de negócio: mesma tela, dados preservados
+        return formWithPicking(form, model);
+    }
+}</code></pre>
+  <p>Há dois níveis de validação, de propósito:</p>
+  <ol>
+    <li><strong>Formato</strong>, com Bean Validation no objeto de formulário: <code>@NotNull(message = "Informe o local de origem")</code>, <code>@DecimalMin("0")</code>, <code>@Size(max = 120)</code>. Os erros chegam em <code>BindingResult</code>.</li>
+    <li><strong>Regra de negócio</strong>, no serviço: "origem e destino devem ser diferentes", "estoque insuficiente". Lançadas como <code>BusinessException</code>.</li>
+  </ol>
+  <p>O formulário (<code>PickingForm</code>) é uma classe separada da entidade (<code>Picking</code>). Isso evita <em>mass assignment</em>: o usuário não consegue enviar um campo <code>state=DONE</code> no POST e pular a validação, porque o formulário nem tem esse campo.</p>
+  <h4>Post/Redirect/Get e mensagens flash</h4>
+  <p>Depois de um POST bem-sucedido, o controller nunca devolve HTML: devolve <code>redirect:</code>. O navegador faz um GET novo. Assim, F5 repete o GET inofensivo, e não o POST que validou a entrega. A mensagem de sucesso sobrevive ao redirect por ser um <em>flash attribute</em>: guardada na sessão para exatamente uma requisição seguinte.</p>
+  <h4>Tratamento global de erros</h4>
+  <p class="arquivo">web/GlobalControllerAdvice.java</p>
+  <pre><code class="language-java">@ExceptionHandler(BusinessException.class)
+public String businessError(BusinessException e, HttpServletRequest request, RedirectAttributes redirect) {
+    redirect.addFlashAttribute("error", e.getMessage());
+    return "redirect:" + back(request);       // volta para a página de onde o usuário veio
+}
+
+/** Volta para a página de origem, aceitando apenas caminhos locais. */
+static String back(HttpServletRequest request) {
+    String referer = request.getHeader("Referer");
+    if (referer != null) {
+        String host = request.getScheme() + "://" + request.getServerName();
+        if (referer.startsWith(host)) {
+            int pathStart = referer.indexOf('/', host.length());
+            if (pathStart >= 0 &amp;&amp; !referer.startsWith("//", pathStart) &amp;&amp; !referer.startsWith("/\\", pathStart)) {
+                return referer.substring(pathStart);
+            }
+        }
+    }
+    return "/";
+}</code></pre>
+  <p>Por isso as ações simples (<code>confirm</code>, <code>validate</code>, <code>cancel</code>) não têm <code>try/catch</code>: qualquer <code>BusinessException</code> é capturada aqui. O método <code>back</code> é uma aula de segurança: o cabeçalho <code>Referer</code> vem do cliente e pode ser forjado. Redirecionar cegamente para ele seria um <strong>open redirect</strong> (um link do seu domínio que leva a um site de phishing). Por isso o código só aceita referers do próprio host e rejeita caminhos como <code>//evil.com</code> e <code>/\evil.com</code>, que navegadores interpretam como outro domínio.</p>
+</section>
+
+<section class="cap" id="c27" data-titulo="API REST">
+  <div class="cap-head"><span class="etiqueta"><span>WH/APOSTILA/27</span><i></i></span><span class="nivel">Intermediário</span></div>
+  <h3>A API REST: JSON, DTOs e documentação</h3>
+  <p>Além das telas, o sistema expõe <code>/api</code> para integrações (um e-commerce consultando saldo, um BI lendo a reposição):</p>
+  <pre><code class="language-java">@RestController
+@RequestMapping("/api")
+@Tag(name = "Estoque", description = "Consulta de produtos, saldos e reposição")
+public class InventoryApiController {
+
+    @Operation(summary = "Lista produtos ativos com saldo total")
+    @GetMapping("/products")
+    public Page&lt;ProductDto> products(@RequestParam(defaultValue = "") String q, ...) {
+        return products.search(...).map(p -> ProductDto.of(p, stockService.onHandTotal(p)));
+    }
+
+    @PostMapping("/replenishment/order")
+    public OrderResult order(@RequestBody List&lt;Long> ruleIds, @RequestParam(defaultValue = "false") boolean toMax) {
+        return new OrderResult(replenishment.order(ruleIds, toMax));
+    }
+
+    @ExceptionHandler(BusinessException.class)
+    @ResponseStatus(HttpStatus.UNPROCESSABLE_CONTENT)        // 422
+    public ErrorDto handle(BusinessException e) {
+        return new ErrorDto(e.getMessage());
+    }
+}</code></pre>
+  <h4>Por que DTOs em vez de devolver a entidade</h4>
+  <pre><code class="language-java">public record ProductDto(Long id, String sku, String name, String category, String uom, BigDecimal cost,
+                         BigDecimal salePrice, String route, String supplier, int leadTimeDays, boolean active,
+                         BigDecimal onHand) {
+    static ProductDto of(Product p, BigDecimal onHand) { ... }
+}</code></pre>
+  <ul>
+    <li><strong>Contrato estável</strong>: renomear um campo da entidade não quebra os clientes da API.</li>
+    <li><strong>Sem vazamento</strong>: a entidade <code>AppUser</code> tem o hash da senha; um DTO só expõe o que foi escolhido.</li>
+    <li><strong>Sem armadilhas do Hibernate</strong>: serializar uma entidade com relacionamentos LAZY dispara consultas ou erros, e relacionamentos bidirecionais (<code>Picking ↔ StockMove</code>) geram recursão infinita no JSON.</li>
+    <li><strong>Dados calculados</strong>: <code>onHand</code> não é coluna de <code>Product</code>; o DTO junta dados de lugares diferentes.</li>
+  </ul>
+  <h4>Status HTTP com significado</h4>
+  <p>Erros de regra de negócio viram <code>422 Unprocessable Content</code> com <code>{"message": "..."}</code>: a requisição está bem formada, mas viola uma regra. É diferente de <code>400</code> (malformada) e de <code>404</code> (não existe). A versão Node faz a mesma distinção com <code>409 Conflict</code> para estoque insuficiente.</p>
+  <h4>OpenAPI e Swagger</h4>
+  <p>Com a dependência <code>springdoc-openapi</code>, as anotações <code>@Tag</code> e <code>@Operation</code> geram a especificação OpenAPI e uma página interativa em <code>/swagger-ui.html</code>, onde dá para testar cada endpoint no navegador.</p>
+  <pre><code class="language-bash">curl -u admin:admin123 "http://localhost:8080/api/stock?q=mesa&amp;size=20"
+curl -u admin:admin123 -X POST -H "Content-Type: application/json" \
+     -d "[1, 4]" "http://localhost:8080/api/replenishment/order"</code></pre>
+</section>
+
+<section class="cap" id="c28" data-titulo="Spring Security">
+  <div class="cap-head"><span class="etiqueta"><span>WH/APOSTILA/28</span><i></i></span><span class="nivel">Avançado</span></div>
+  <h3>Spring Security: login, perfis, senhas e CSRF</h3>
+  <p class="arquivo">config/SecurityConfig.java</p>
+  <pre><code class="language-java">@Bean
+SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    http
+        .authorizeHttpRequests(auth -> auth
+            .requestMatchers("/login", "/webjars/**", "/css/**", "/js/**", "/img/**", "/favicon.ico",
+                             "/error", "/actuator/health/**").permitAll()
+            .requestMatchers("/config/**").hasRole("ADMIN")
+            .anyRequest().authenticated())
+        .formLogin(form -> form.loginPage("/login").defaultSuccessUrl("/", true).permitAll())
+        .logout(logout -> logout.logoutSuccessUrl("/login?logout"))
+        .httpBasic(Customizer.withDefaults())                       // para a API
+        .csrf(csrf -> csrf.ignoringRequestMatchers("/api/**"));
+    return http.build();
+}</code></pre>
+  <h4>Como funciona</h4>
+  <p>O Spring Security é uma cadeia de filtros que roda antes dos controllers. As regras são avaliadas <strong>na ordem</strong>: a primeira que casa decide. Por isso as liberações (<code>permitAll</code>) vêm antes do <code>anyRequest().authenticated()</code>, que é o "todo o resto exige login".</p>
+  <ul>
+    <li><strong>Autenticação</strong> (quem é você): por formulário de login, que cria uma sessão com cookie, ou por HTTP Basic, que manda usuário e senha em cada requisição (usado pela API).</li>
+    <li><strong>Autorização</strong> (o que você pode): <code>/config/**</code> (usuários, locais, armazéns) exige o perfil ADMIN. Na tela, <code>sec:authorize</code> esconde botões; no servidor, a regra de URL bloqueia de verdade. Esconder o botão sozinho não é segurança.</li>
+  </ul>
+  <h4>De onde vêm os usuários</h4>
+  <pre><code class="language-java">@Service
+public class UserService implements UserDetailsService {
+    @Override
+    public UserDetails loadUserByUsername(String username) {
+        var user = users.findByUsernameIgnoreCase(username)
+                .orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado"));
+        return User.withUsername(user.getUsername())
+                .password(user.getPassword())          // hash, nunca a senha em texto
+                .roles(user.getRole().name())          // ADMIN → autoridade ROLE_ADMIN
+                .disabled(!user.isActive())
+                .build();
+    }
+}</code></pre>
+  <p>Basta existir um bean <code>UserDetailsService</code> para o Spring Security usá-lo no login. O usuário inativo é bloqueado por <code>disabled</code>, sem precisar apagar o registro.</p>
+  <h4>Senhas</h4>
+  <pre><code class="language-java">@Bean
+PasswordEncoder passwordEncoder() {
+    return PasswordEncoderFactories.createDelegatingPasswordEncoder();
+}</code></pre>
+  <p>O encoder delegante grava a senha como <code>{bcrypt}$2a$10$...</code>. O prefixo indica o algoritmo, o que permite migrar para um algoritmo mais forte no futuro sem invalidar as senhas antigas. O BCrypt é lento de propósito e usa um <em>salt</em> aleatório: duas senhas iguais geram hashes diferentes, e um vazamento do banco não revela as senhas.</p>
+  <h4>CSRF: por que está ligado nas telas e desligado na API</h4>
+  <p>Num ataque CSRF, um site malicioso faz o navegador da vítima enviar um POST para <code>/pickings/42/validate</code>. O navegador anexa o cookie de sessão automaticamente, e a ação seria executada em nome da vítima. A defesa é um token secreto em cada formulário, que o site atacante não consegue ler. O Thymeleaf insere esse token sozinho em todo formulário POST montado com <code>th:action</code>.</p>
+  <p>A API é dispensada (<code>ignoringRequestMatchers("/api/**")</code>) porque clientes de API autenticam com HTTP Basic em cada chamada e não dependem do cookie de sessão. Fica uma observação: se um usuário logado no navegador também acessar <code>/api</code>, o cookie de sessão é aceito ali. Uma configuração mais rígida separaria a API numa cadeia de filtros própria, <em>stateless</em>, que só aceita Basic ou token.</p>
+  <h4>Regras de negócio de segurança</h4>
+  <pre><code class="language-java">boolean self = !creating &amp;&amp; user.getUsername().equalsIgnoreCase(currentUsername);
+if (self &amp;&amp; (!form.isActive() || form.getRole() != Role.ADMIN) &amp;&amp; user.getRole() == Role.ADMIN) {
+    throw new BusinessException("Você não pode desativar nem remover o perfil de administrador da sua própria conta.");
+}</code></pre>
+  <p>Um administrador não pode se rebaixar ou se desativar, o que evitaria um sistema sem nenhum admin. Também há tamanho mínimo de senha e login único sem diferenciar maiúsculas.</p>
+</section>
+
+<!-- ============================== PARTE IX ============================== -->
+<div class="parte" id="parte-9" data-parte="IX · Qualidade e operação">
+  <div class="eyebrow">Parte IX</div>
+  <h2>Testes, Docker e operação</h2>
+  <p>Como o projeto garante que funciona e como ele roda fora da sua máquina.</p>
+</div>
+
+<section class="cap" id="c29" data-titulo="Testes">
+  <div class="cap-head"><span class="etiqueta"><span>WH/APOSTILA/29</span><i></i></span><span class="nivel">Avançado</span></div>
+  <h3>Testes: unitários, parametrizados e com banco real</h3>
+  <div class="tabela"><table>
+    <thead><tr><th>Teste</th><th>Tipo</th><th>O que cobre</th></tr></thead>
+    <tbody>
+      <tr><td><code>ReplenishmentCalculationTest</code></td><td>Unitário parametrizado</td><td>A fórmula de quanto pedir, sem Spring nem banco</td></tr>
+      <tr><td><code>ViewHelperTest</code></td><td>Unitário</td><td>Formatação usada nas telas</td></tr>
+      <tr><td><code>StockFlowIntegrationTest</code></td><td>Integração (PostgreSQL real)</td><td>Ciclo completo, entrega sem estoque, consumo de sublocais</td></tr>
+      <tr><td><code>PageRenderingIntegrationTest</code></td><td>Integração web</td><td>As páginas renderizam sem erro</td></tr>
+    </tbody>
+  </table></div>
+  <h4>Testes parametrizados</h4>
+  <pre><code class="language-java">@ParameterizedTest(name = "previsão {0}, mín {1}, máx {2}, múltiplo {3} → pedir {4}")
+@CsvSource({
+        "-1,  0,  0,  1, 1",
+        "4,   5, 10,  1, 6",
+        "3,   5, 10,  4, 8",
+})
+void quantityToOrder(String forecast, String min, String max, String multiple, String expected) {
+    BigDecimal result = ReplenishmentService.quantityToOrder(new BigDecimal(forecast), ...);
+    assertThat(result).isEqualByComparingTo(expected);
+}</code></pre>
+  <p>Cada linha do CSV vira um caso de teste separado, com nome legível no relatório. Os parâmetros chegam como <code>String</code> e viram <code>BigDecimal</code> pelo construtor de String, seguindo a regra do Capítulo 4.</p>
+  <h4>Testcontainers: testar contra o banco de verdade</h4>
+  <pre><code class="language-java">@SpringBootTest(properties = {"app.demo-data=false", "app.replenishment.scheduler-enabled=false"})
+@Testcontainers(disabledWithoutDocker = true)
+@Transactional
+class StockFlowIntegrationTest {
+    @Container
+    @ServiceConnection
+    static PostgreSQLContainer postgres = new PostgreSQLContainer("postgres:17-alpine");
+    ...
+}</code></pre>
+  <ul>
+    <li>O Testcontainers sobe um PostgreSQL 17 num container Docker temporário. <code>@ServiceConnection</code> aponta o datasource do Spring para ele, sem configurar URL.</li>
+    <li>O Flyway roda as migrações nesse banco: o teste valida também o esquema.</li>
+    <li>Testar com H2 ou outro banco em memória não pegaria nada disso: <code>FOR UPDATE</code>, <code>nextval</code> e o comportamento exato de <code>numeric</code> são do PostgreSQL.</li>
+    <li><code>@Transactional</code> no teste faz rollback ao final de cada método: cada teste começa com o banco limpo.</li>
+    <li><code>disabledWithoutDocker = true</code>: sem Docker, o teste é pulado em vez de falhar.</li>
+  </ul>
+  <h4>O que vale testar num sistema de estoque</h4>
+  <ul>
+    <li>Conservação: a soma dos saldos internos muda exatamente pelo que entrou ou saiu dos locais virtuais.</li>
+    <li>Recusas: entrega sem saldo, validar duas vezes, editar operação concluída.</li>
+    <li>Fronteiras da fórmula: igual ao mínimo, previsão negativa, múltiplos.</li>
+    <li>Concorrência: duas threads validando entregas do mesmo produto, e o saldo nunca negativo. É o teste que falta no projeto (exercício abaixo).</li>
+  </ul>
+  <div class="exs-titulo">Exercícios</div>
+  <details class="ex"><summary>1. Esboce um teste de concorrência para o Capítulo 17.</summary><div><p>Sem <code>@Transactional</code> no teste (cada thread precisa da própria transação). Prepare saldo 10 e duas entregas de 8. Dispare as duas validações com um <code>ExecutorService</code> e um <code>CountDownLatch</code> para começarem juntas. Espere que exatamente uma termine e a outra lance <code>BusinessException</code> com "Estoque insuficiente", e que o saldo final seja 2.</p></div></details>
+  <details class="ex"><summary>2. Por que o teste desliga o agendador?</summary><div><p>O agendador roda a cada 15 minutos em outra thread e cria pedidos. Se disparasse durante o teste, mudaria os números e o teste falharia de forma intermitente: o pior tipo de teste.</p></div></details>
+</section>
+
+<section class="cap" id="c30" data-titulo="Docker e operação">
+  <div class="cap-head"><span class="etiqueta"><span>WH/APOSTILA/30</span><i></i></span><span class="nivel">Avançado</span></div>
+  <h3>Docker, Compose e o que a aplicação precisa em produção</h3>
+  <p class="arquivo">Dockerfile</p>
+  <pre><code class="language-bash"># Build
+FROM eclipse-temurin:25-jdk AS build
+WORKDIR /app
+COPY .mvn .mvn
+COPY mvnw pom.xml ./
+RUN ./mvnw -q dependency:go-offline        # camada de dependências, reaproveitada no cache
+COPY src src
+RUN ./mvnw -q package -DskipTests
+
+# Runtime
+FROM eclipse-temurin:25-jre
+WORKDIR /app
+RUN useradd --system --uid 10001 app
+COPY --from=build /app/target/sistema-estoque-*.jar app.jar
+USER app
+EXPOSE 8080
+ENTRYPOINT ["java", "-XX:MaxRAMPercentage=75", "-jar", "app.jar"]</code></pre>
+  <ul>
+    <li><strong>Multi-stage</strong>: compila com o JDK completo e copia só o <code>.jar</code> para uma imagem com o JRE. A imagem final não tem Maven, código-fonte nem compilador.</li>
+    <li><strong>Ordem das camadas</strong>: <code>pom.xml</code> é copiado e as dependências baixadas antes de copiar o <code>src</code>. Mudar código não invalida o cache das dependências, e o build fica muito mais rápido.</li>
+    <li><strong>Usuário sem privilégio</strong>: se a aplicação for comprometida, o atacante não é root no container.</li>
+    <li><strong><code>MaxRAMPercentage=75</code></strong>: a JVM dimensiona o heap pelo limite de memória do container, e não pela memória da máquina hospedeira.</li>
+  </ul>
+  <p class="arquivo">compose.yaml (trecho)</p>
+  <pre><code class="language-yaml">services:
+  postgres:
+    image: postgres:17-alpine
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U estoque -d estoque"]
+  app:
+    build: .
+    depends_on:
+      postgres:
+        condition: service_healthy      # só sobe quando o banco aceita conexões
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/estoque
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin123}</code></pre>
+  <p><code>docker compose up --build</code> sobe tudo. O <code>healthcheck</code> com <code>condition: service_healthy</code> evita a corrida clássica em que a aplicação tenta conectar antes de o PostgreSQL terminar de iniciar. Dentro da rede do Compose, o banco é encontrado pelo nome do serviço (<code>postgres:5432</code>).</p>
+  <h4>Outros recursos de operação</h4>
+  <ul>
+    <li><strong>Actuator</strong>: <code>/actuator/health</code> é público (para o orquestrador saber se a instância está viva) e mostra detalhes só para usuários autorizados.</li>
+    <li><strong>Virtual threads</strong> (<code>spring.threads.virtual.enabled: true</code>): cada requisição roda numa thread virtual do Java 21+, barata de criar. Uma requisição esperando o banco não ocupa uma thread do sistema operacional.</li>
+    <li><strong>Sessão de 8 horas</strong>: um turno de trabalho no armazém sem precisar logar de novo.</li>
+  </ul>
+</section>
+
+<!-- ============================== PARTE X ============================== -->
+<div class="parte" id="parte-10" data-parte="X · Contraponto">
+  <div class="eyebrow">Parte X</div>
+  <h2>O mesmo problema em Node e Angular</h2>
+  <p>A versão enxuta do repositório e as lições tiradas ao construí-la e testá-la.</p>
+</div>
+
+<section class="cap" id="c31" data-titulo="Comparando as duas versões">
+  <div class="cap-head"><span class="etiqueta"><span>WH/APOSTILA/31</span><i></i></span><span class="nivel">Intermediário</span></div>
+  <h3>Comparando as duas implementações</h3>
+  <div class="tabela"><table>
+    <thead><tr><th>Aspecto</th><th>Java / Spring Boot</th><th>Node / Express + Angular</th></tr></thead>
+    <tbody>
+      <tr><td>Modelo</td><td>Movimentos entre locais (partidas dobradas)</td><td>Contador por produto + histórico</td></tr>
+      <tr><td>Locais</td><td>Árvore com caminho materializado</td><td>Um só depósito</td></tr>
+      <tr><td>Previsão</td><td>Saldo + confirmados</td><td>Não existe (tudo é imediato)</td></tr>
+      <tr><td>Banco</td><td>PostgreSQL + Flyway</td><td>SQLite embutido no Node (<code>node:sqlite</code>) + migrações aditivas no código</td></tr>
+      <tr><td>Concorrência</td><td><code>SELECT ... FOR UPDATE</code> por linha</td><td><code>BEGIN IMMEDIATE</code> (trava o banco para escrita)</td></tr>
+      <tr><td>Telas</td><td>Thymeleaf, renderizadas no servidor</td><td>SPA Angular consumindo a API JSON</td></tr>
+      <tr><td>Erros</td><td><code>BusinessException</code> → flash ou 422</td><td><code>HttpError</code> → <code>{ "erro": "..." }</code> com 400/404/409</td></tr>
+      <tr><td>Exclusão</td><td>Produtos são arquivados (<code>active</code>)</td><td>Exclusão lógica (<code>ativo</code>) se houver histórico</td></tr>
+      <tr><td>Auditoria do saldo</td><td>Pela trilha de movimentos</td><td><code>quantidade_anterior</code> e <code>quantidade_posterior</code> em cada movimentação</td></tr>
+    </tbody>
+  </table></div>
+  <p>As duas chegaram, por caminhos diferentes, às mesmas regras: movimentações imutáveis, nunca apagar produto com histórico, saldo nunca negativo, verificação e escrita na mesma transação. São invariantes do domínio, não da tecnologia.</p>
+  <h4>O front Angular em uma página</h4>
+  <ul>
+    <li><strong>Componentes standalone e signals</strong>: o estado de cada tela fica em <code>signal()</code>, e o template se atualiza quando o valor muda.</li>
+    <li><strong>Um serviço por recurso</strong> (<code>ProdutoService</code>, <code>MovimentacaoService</code>) concentra as URLs da API.</li>
+    <li><strong>Interceptor HTTP</strong>: transforma qualquer erro da API em aviso na tela num lugar só, em vez de repetir tratamento em cada chamada.</li>
+    <li><strong>Proxy do <code>ng serve</code></strong>: em desenvolvimento, <code>/api</code> é encaminhado para o backend, sem configurar CORS.</li>
+  </ul>
+</section>
+
+<section class="cap" id="c32" data-titulo="Lições dos bugs reais">
+  <div class="cap-head"><span class="etiqueta"><span>WH/APOSTILA/32</span><i></i></span><span class="nivel">Avançado</span></div>
+  <h3>Lições dos bugs encontrados neste repositório</h3>
+  <p>Os testes feitos durante a construção da versão Node encontraram problemas reais. Cada um ensina algo que vale para o Java também.</p>
+  <h4>1. Curingas do LIKE na busca</h4>
+  <p>Buscar <code>%</code> ou <code>_</code> trazia todos os produtos, porque o texto digitado ia direto para <code>LIKE '%texto%'</code>. A correção escapa os curingas e declara o caractere de escape:</p>
+  <pre><code class="language-javascript">export const escaparLike = (s) => s.replace(/[\\%_]/g, '\\$&amp;');
+// ...
+where.push("(p.nome LIKE ? ESCAPE '\\' OR p.sku LIKE ? ESCAPE '\\')");</code></pre>
+  <p><strong>Resposta do desafio do Capítulo 14.</strong> O Java tem o mesmo risco nas buscas por subárvore (<code>like concat(:path, '/%')</code>) e nas buscas por termo. A correção equivalente:</p>
+  <pre><code class="language-java">static String escapeLike(String s) {
+    return s.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_");
+}
+// JPQL:
+//   q.location.fullName like concat(:path, '/%') escape '\'
+// e passar escapeLike(location.getFullName()) como :path</code></pre>
+  <p>A busca por subárvore também poderia evitar o LIKE com uma comparação de intervalo, desde que a coluna use a collation <code>"C"</code> (ordem pelos bytes, e não pelas regras do idioma): com <code>full_name >= 'WH/A_1/'</code> e <code>full_name &lt; 'WH/A_10'</code> (o caractere seguinte a <code>/</code> na tabela ASCII é <code>0</code>), a comparação de intervalo não tem curingas e usa índice.</p>
+  <h4>2. Regressão: a correção some na refatoração</h4>
+  <p>A proteção do LIKE foi escrita, depois perdida numa refatoração do backend, e só foi reencontrada porque havia um teste automatizado para ela. A lição: <strong>todo bug corrigido ganha um teste de regressão</strong>. O backend passou a ter um, e o caso entrou nos 63 testes da API.</p>
+  <h4>3. Contrato entre front e back</h4>
+  <p>Quando o backend mudou (estoque insuficiente passou de 400 para 409, produtos ganharam o campo <code>ativo</code>), o front continuou funcionando porque lia só o formato <code>{ "erro": "..." }</code>, que foi mantido. Mudar a forma do erro teria quebrado todas as telas. Defina o formato de erro cedo e trate-o como contrato público.</p>
+  <h4>4. Erros já tratados viravam exceções no console</h4>
+  <p>O interceptor mostrava o aviso, mas relançava o erro, e chamadas sem tratamento local apareciam como exceção não tratada. Foi resolvido num lugar só (<code>rxjs config.onUnhandledError</code> ignorando erros HTTP já exibidos). A lição: decida <strong>onde</strong> cada erro é tratado e não trate o mesmo erro em dois lugares.</p>
+  <h4>5. Datas sem fuso</h4>
+  <p>O SQLite grava <code>datetime('now')</code> em UTC, sem fuso. O front converte para a hora local ao exibir, mas o filtro por período compara a data em UTC: uma movimentação feita depois das 21h em Brasília conta como do dia seguinte. É o mesmo alerta do Capítulo 4 sobre <code>LocalDateTime</code>.</p>
+</section>
+
+<!-- ============================== PARTE XI ============================== -->
+<div class="parte" id="parte-11" data-parte="XI · Além">
+  <div class="eyebrow">Parte XI</div>
+  <h2>Para ir além</h2>
+  <p>O que um sistema de estoque comercial tem e este ainda não tem, e como você implementaria cada parte sobre a base existente.</p>
+</div>
+
+<section class="cap" id="c33" data-titulo="Próximos passos">
+  <div class="cap-head"><span class="etiqueta"><span>WH/APOSTILA/33</span><i></i></span><span class="nivel">Avançado</span></div>
+  <h3>Próximos passos: do projeto de estudo ao ERP</h3>
+  <h4>Custeio do estoque</h4>
+  <p>Hoje o valor do estoque usa <code>Product.cost</code> fixo. Na prática o custo muda a cada compra. Métodos clássicos:</p>
+  <ul>
+    <li><strong>Custo médio ponderado</strong> (o mais usado no Brasil): ao receber, <code>novoCusto = (qtdAtual × custoAtual + qtdRecebida × preçoCompra) / (qtdAtual + qtdRecebida)</code>. Implementação: em <code>PickingService.validate</code>, para recebimentos com pedido de compra, recalcular <code>product.cost</code> antes de aplicar o movimento.</li>
+    <li><strong>PEPS / FIFO</strong>: a primeira unidade que entra é a primeira que sai. Exige guardar "camadas" de custo por entrada e consumi-las na saída, como <code>applyMove</code> já faz com os saldos por local.</li>
+  </ul>
+  <h4>Lotes, validade e números de série</h4>
+  <p>Acrescentar <code>lot</code> ao <code>StockQuant</code> (a chave vira produto + local + lote) e ao <code>StockMove</code>. A saída passa a escolher lotes por regra (vence primeiro, sai primeiro: FEFO). A estrutura de <code>findAvailableForUpdate</code> + consumo em laço já é o algoritmo; muda o <code>order by</code>.</p>
+  <h4>Reservas</h4>
+  <p>Uma entrega READY ainda não "segura" a mercadoria: outra entrega pode validar antes e consumir o saldo. Um campo <code>reserved_quantity</code> no <code>StockQuant</code>, preenchido ao confirmar, separa <em>em mãos</em> de <em>disponível</em> (<code>em mãos − reservado</code>).</p>
+  <h4>Previsão por data e lead time</h4>
+  <p>Calcular a previsão só com movimentos até <code>hoje + leadTimeDays</code>: o que vai chegar depois do prazo de reposição não ajuda a cobrir a falta de amanhã.</p>
+  <h4>Auditoria e travamento otimista</h4>
+  <ul>
+    <li><strong>Hibernate Envers</strong>: <code>@Audited</code> nas entidades gera tabelas de histórico de quem mudou o quê (útil para preços e regras).</li>
+    <li><strong><code>@Version</code></strong> em <code>Product</code> e <code>ReorderRule</code>: dois usuários editando o mesmo cadastro, e o segundo recebe um aviso em vez de sobrescrever o primeiro sem saber.</li>
+  </ul>
+  <h4>Integrações e eventos</h4>
+  <p>Publicar um evento quando um movimento é concluído (<code>ApplicationEventPublisher</code> e, entre sistemas, uma fila como Kafka ou RabbitMQ). O e-commerce atualiza a disponibilidade sem ficar consultando a API. O cuidado é publicar só depois do commit (<code>@TransactionalEventListener(phase = AFTER_COMMIT)</code>), senão um rollback deixaria o evento no mundo sem o dado no banco.</p>
+  <h4>Idempotência na API</h4>
+  <p>Se a rede cair depois de <code>POST /api/replenishment/order</code> e o cliente repetir a chamada, dois pedidos são criados. Um cabeçalho <code>Idempotency-Key</code> gravado com o resultado permite devolver a mesma resposta na repetição.</p>
+  <h4>Checklist final: você entendeu o sistema se consegue explicar...</h4>
+  <ul>
+    <li>por que receber mercadoria é mover de Fornecedores para o estoque, e não "somar no produto";</li>
+    <li>a diferença entre saldo, previsão e previsão virtual, e de onde cada número vem;</li>
+    <li>por que <code>applyMove</code> trava as linhas, e em que ordem;</li>
+    <li>por que <code>confirm</code> grava no banco sem chamar <code>save</code>;</li>
+    <li>quanto pedir com previsão −4, mín. 5, máx. 20 e múltiplo 6 (resposta: faltam 24, múltiplo de 6 → 24);</li>
+    <li>por que a API devolve DTOs e não entidades;</li>
+    <li>o que o token CSRF impede e por que a API pode dispensá-lo;</li>
+    <li>por que o teste de integração usa PostgreSQL de verdade.</li>
+  </ul>
+</section>
+
+<section class="cap" id="c34" data-titulo="Glossário">
+  <div class="cap-head"><span class="etiqueta"><span>WH/APOSTILA/34</span><i></i></span><span class="nivel">Referência</span></div>
+  <h3>Glossário</h3>
+  <div class="tabela"><table>
+    <thead><tr><th>Termo</th><th>Definição</th></tr></thead>
+    <tbody>
+      <tr><td>ACID</td><td>Atomicidade, consistência, isolamento e durabilidade: as garantias de uma transação de banco.</td></tr>
+      <tr><td>Bean</td><td>Objeto criado e gerenciado pelo container do Spring.</td></tr>
+      <tr><td>BOM</td><td>Lista de materiais de um produto fabricado. Em Maven, é também a lista de versões de dependências.</td></tr>
+      <tr><td>CSRF</td><td>Ataque que usa a sessão do usuário para enviar ações a partir de outro site.</td></tr>
+      <tr><td>Dirty checking</td><td>Detecção automática, pelo Hibernate, de entidades alteradas, gravadas no commit.</td></tr>
+      <tr><td>DTO</td><td>Objeto que só transporta dados entre camadas ou sistemas.</td></tr>
+      <tr><td>FEFO / FIFO</td><td>Primeiro a vencer, primeiro a sair / primeiro a entrar, primeiro a sair.</td></tr>
+      <tr><td>Flyway</td><td>Ferramenta de versionamento do esquema do banco por migrações numeradas.</td></tr>
+      <tr><td>JPQL</td><td>Linguagem de consulta da JPA, escrita sobre entidades.</td></tr>
+      <tr><td>Lead time</td><td>Tempo entre pedir e receber.</td></tr>
+      <tr><td>Lost update</td><td>Atualização perdida quando duas transações leem e gravam o mesmo valor.</td></tr>
+      <tr><td>MRP</td><td>Planejamento de necessidades de materiais: calcula o que comprar e fabricar a partir da demanda.</td></tr>
+      <tr><td>N+1</td><td>Uma consulta para a lista e mais uma para cada item: o problema de desempenho clássico do ORM.</td></tr>
+      <tr><td>Picking</td><td>Operação de estoque: recebimento, entrega ou transferência.</td></tr>
+      <tr><td>PRG</td><td>Post/Redirect/Get: responder POST com redirect para evitar reenvio.</td></tr>
+      <tr><td>Quant</td><td>Saldo de um produto num local.</td></tr>
+      <tr><td>SKU</td><td>Código único de um item de estoque.</td></tr>
+      <tr><td>Snooze</td><td>Adiar um alerta de reposição até uma data.</td></tr>
+    </tbody>
+  </table></div>
+</section>
+</main>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script>
+(function () {
+  try { if (window.hljs) document.querySelectorAll('pre code[class*="language-"]').forEach(function (el) { hljs.highlightElement(el); }); } catch (e) {}
+
+  var KEY = 'apostila-estoque-estudados';
+  var feitos = {};
+  try { feitos = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch (e) { feitos = {}; }
+  function salvar() { try { localStorage.setItem(KEY, JSON.stringify(feitos)); } catch (e) {} }
+
+  var caps = Array.prototype.slice.call(document.querySelectorAll('section.cap'));
+  var indice = document.getElementById('indice');
+  var indiceMob = document.getElementById('indice-mobile');
+  var links = {};
+  var parteAtual = null;
+
+  caps.forEach(function (cap) {
+    var parte = cap.previousElementSibling;
+    while (parte && !parte.classList.contains('parte') && !parte.classList.contains('cap')) parte = parte.previousElementSibling;
+    if (parte && parte.classList.contains('parte') && parte !== parteAtual) {
+      parteAtual = parte;
+      [indice, indiceMob].forEach(function (lista) {
+        var li = document.createElement('li'); li.className = 'part'; li.textContent = parte.getAttribute('data-parte'); lista.appendChild(li);
+      });
+    }
+    var n = cap.id.replace('c', '');
+    var titulo = cap.getAttribute('data-titulo');
+    var li = document.createElement('li');
+    var a = document.createElement('a'); a.href = '#' + cap.id;
+    var sn = document.createElement('span'); sn.className = 'n'; sn.textContent = n;
+    var st = document.createElement('span'); st.textContent = titulo;
+    a.appendChild(sn); a.appendChild(st); li.appendChild(a); indice.appendChild(li);
+    links[cap.id] = a;
+    var li2 = document.createElement('li'); var a2 = document.createElement('a'); a2.href = '#' + cap.id; a2.textContent = n + ' · ' + titulo; li2.appendChild(a2); indiceMob.appendChild(li2);
+
+    var label = document.createElement('label'); label.className = 'estudado';
+    var cb = document.createElement('input'); cb.type = 'checkbox'; cb.id = 'estudado-' + cap.id;
+    cb.checked = !!feitos[cap.id];
+    cb.addEventListener('change', function () { if (cb.checked) feitos[cap.id] = 1; else delete feitos[cap.id]; salvar(); atualizar(); });
+    label.appendChild(cb); label.appendChild(document.createTextNode('Estudado'));
+    cap.querySelector('.cap-head').appendChild(label);
+  });
+
+  function atualizar() {
+    var total = caps.length, ok = 0;
+    caps.forEach(function (c) { var f = !!feitos[c.id]; if (f) ok++; links[c.id].classList.toggle('feito', f); });
+    document.getElementById('progresso').textContent = ok + ' de ' + total;
+    document.getElementById('barra').style.width = (total ? (ok / total * 100) : 0) + '%';
+  }
+  atualizar();
+
+  if ('IntersectionObserver' in window) {
+    var obs = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (e.isIntersecting) {
+          Object.keys(links).forEach(function (k) { links[k].classList.remove('ativo'); });
+          links[e.target.id].classList.add('ativo');
+          var t = document.querySelector('.toc'); var l = links[e.target.id];
+          if (t && l && (l.offsetTop < t.scrollTop || l.offsetTop > t.scrollTop + t.clientHeight - 60)) t.scrollTop = l.offsetTop - 120;
+        }
+      });
+    }, { rootMargin: '-15% 0px -75% 0px' });
+    caps.forEach(function (c) { obs.observe(c); });
+  }
+})();
+</script>
+
+<script type="module">
+  // Desenha os diagramas (na versão publicada como Artifact isso é feito pela plataforma).
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.esm.min.mjs";
+  const escuro = document.documentElement.dataset.theme === "dark" ||
+    (!document.documentElement.dataset.theme && matchMedia("(prefers-color-scheme: dark)").matches);
+  mermaid.initialize({ startOnLoad: true, theme: escuro ? "dark" : "default", securityLevel: "strict" });
+</script>
+</body>
+</html>
